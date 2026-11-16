@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Absensi Dosen | Politeknik IDN Bogor</title>
+  <style>
+    :root {
+      --primary: #0f2a4a;
+      --accent: #1f6feb;
+      --bg: #f4f6fa;
+      --card: #ffffff;
+      --border: #d9e0ea;
+      --text: #1d2939;
+      --muted: #667085;
+      --success: #067647;
+      --error: #b42318;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+    .wrapper { width: 100%; max-width: 680px; }
+    .header {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 14px 14px 0 0;
+      padding: 24px 28px;
+    }
+    .header h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+    .header p { margin: 0; font-size: 14px; opacity: 0.8; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 14px 14px;
+      padding: 28px;
+    }
+    .field { margin-bottom: 18px; }
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    label span { color: var(--error); }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      background: #fff;
+      color: var(--text);
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.15);
+    }
+    textarea { min-height: 80px; resize: vertical; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    button:disabled { background: #98a2b3; cursor: not-allowed; }
+    .status {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: none;
+    }
+    .status.ok { display: block; background: #ecfdf3; color: var(--success); border: 1px solid #abefc6; }
+    .status.err { display: block; background: #fef3f2; color: var(--error); border: 1px solid #fecdca; }
+    @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <h1>Form Absensi Dosen</h1>
+    <p>Politeknik IDN Bogor. Isi setiap kali selesai mengajar.</p>
+  </div>
+
+  <div class="card">
+    <form id="formAbsensi">
+      <div class="field">
+        <label for="dosen">Dosen Pengampu <span>*</span></label>
+        <select id="dosen" required></select>
+      </div>
+
+      <div class="field">
+        <label for="mataKuliah">Mata Kuliah <span>*</span></label>
+        <select id="mataKuliah" required></select>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="pertemuan">Pertemuan Ke- <span>*</span></label>
+          <select id="pertemuan" required></select>
+        </div>
+        <div class="field">
+          <label for="tanggal">Tanggal Masuk <span>*</span></label>
+          <input type="date" id="tanggal" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="materi">Materi Ajar <span>*</span></label>
+        <textarea id="materi" required placeholder="Contoh: Use Case Diagram & Data Flow Diagram (DFD)"></textarea>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="statusKehadiran">Status Kehadiran <span>*</span></label>
+          <select id="statusKehadiran" required>
+            <option value="Hadir">Hadir</option>
+            <option value="Terlambat">Terlambat</option>
+            <option value="Izin">Izin</option>
+            <option value="Sakit">Sakit</option>
+            <option value="Tidak Hadir">Tidak Hadir</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="linkBukti">Link Bukti Kelas <span>*</span></label>
+          <input type="url" id="linkBukti" required placeholder="https://...">
+          <div class="hint">Link foto, dokumen, atau screenshot bukti kelas.</div>
+        </div>
+      </div>
+
+      <button type="submit" id="btnSubmit">Kirim Absensi</button>
+      <div id="status" class="status"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // ====== KONFIGURASI: ganti dua nilai ini ======
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby8f0xPX9qMO8eJpaF6XTtzOz8XjCOPJdrGB1LAdzeWGlSAFfN3QJvJl5C8c5Yksfcz/exec';
+  const SECRET_KEY = 'absensidosenpidnb2026'; // harus sama dengan di Apps Script
+
+  // ====== DATA MASTER: sesuaikan dengan data resmi ======
+  const DAFTAR_DOSEN = [
+    'Febryan, S.Kom., M.Kom.',
+    'Arham, S.Kom.', 
+    'Ari Ramadhan, S.Kom', 
+    'Oky Tria Saputra, M.Kom',
+    'Ahmad Fikri Salim, S.Pd, M.Pd'
+  ];
+
+  const DAFTAR_MATKUL = [
+    'Analisa Perancangan Aplikasi',
+    'Struktur Data & Algoritma',
+    'Praktikum UI/UX Design',
+    'Praktikum Database System',
+    'Visual Design',
+    'Praktikum Design Fundamental',
+    'Praktikum Elemen Design',
+    'Ilustrasi 2D 3D',
+    'Jaringan Dasar',
+    'Praktikum Networking 1 (MTCNA)',
+    'Praktikum Jaringan Komputer',
+    'Jaringan Wireless',
+    'Agama Islam 1'
+  ];
+
+  // ====== ISI DROPDOWN ======
+  function isiSelect(id, daftar, placeholder) {
+    const el = document.getElementById(id);
+    el.innerHTML = `<option value="">-- Pilih --</option>` +
+      daftar.map(item => `<option value="${item}">${item}</option>`).join('');
+  }
+
+  isiSelect('dosen', DAFTAR_DOSEN);
+  isiSelect('mataKuliah', DAFTAR_MATKUL);
+
+  const selPertemuan = document.getElementById('pertemuan');
+  selPertemuan.innerHTML = `<option value="">-- Pilih --</option>` +
+    Array.from({ length: 16 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('');
+
+  // Default tanggal hari ini
+  document.getElementById('tanggal').value = new Date().toISOString().slice(0, 10);
+
+  // ====== KIRIM DATA ======
+  const form = document.getElementById('formAbsensi');
+  const btn = document.getElementById('btnSubmit');
+  const statusBox = document.getElementById('status');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const payload = {
+      secret: SECRET_KEY,
+      dosen: document.getElementById('dosen').value,
+      mataKuliah: document.getElementById('mataKuliah').value,
+      pertemuan: document.getElementById('pertemuan').value,
+      tanggal: document.getElementById('tanggal').value,
+      materi: document.getElementById('materi').value.trim(),
+      statusKehadiran: document.getElementById('statusKehadiran').value,
+      linkBukti: document.getElementById('linkBukti').value.trim()
+    };
+
+    btn.disabled = true;
+    btn.textContent = 'Mengirim...';
+    statusBox.className = 'status';
+
+    try {
+      // text/plain menghindari preflight CORS. Apps Script tetap bisa membaca body-nya.
+      // mode no-cors berarti respons tidak bisa dibaca browser, jadi verifikasi hasilnya di Spreadsheet.
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+
+      statusBox.className = 'status ok';
+      statusBox.textContent = 'Absensi berhasil dikirim.';
+      form.reset();
+      document.getElementById('tanggal').value = new Date().toISOString().slice(0, 10);
+    } catch (err) {
+      statusBox.className = 'status err';
+      statusBox.textContent = 'Gagal mengirim. Periksa koneksi internet lalu coba lagi.';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Kirim Absensi';
+    }
+  });
+</script>
+</body>
+</html>
