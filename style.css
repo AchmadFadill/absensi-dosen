@@ -1,0 +1,1100 @@
+/* ==========================================================================
+   POLITEKNIK IDN BOGOR - SISTEM ABSENSI DOSEN & DASHBOARD
+   Design System: Attenad-Inspired Modern SaaS & Academic Dashboard
+   ========================================================================== */
+
+/* ==========================================================================
+   1. DESIGN TOKENS (LIGHT & DARK THEMES)
+   ========================================================================== */
+:root {
+  /* Signature Brand Accent (Attenad Mint / Emerald Theme) */
+  --accent: #00D084;
+  --accent-hover: #05C168;
+  --accent-dark: #049B55;
+  --accent-light: #E6FBF2;
+  --accent-glow: rgba(0, 208, 132, 0.35);
+
+  /* Primary Deep Navy (for buttons & secondary brand elements) */
+  --primary: #102A43;
+  --primary-hover: #1A365D;
+  --primary-active: #0C1E31;
+
+  /* Top Navigation & Sub-Banner (Dark by design, just like Attenad) */
+  --header-bg: #0D1527;        /* Midnight Navy */
+  --header-surface: #172237;   /* Search / Pill / Avatar container */
+  --header-border: rgba(255, 255, 255, 0.08);
+  --header-text: #F8FAFC;
+  --header-text-muted: #94A3B8;
+
+  /* Body Canvas & Cards (Light Mode) */
+  --bg: #F4F6FA;               /* Soft Cool Gray / Off-White */
+  --surface: #FFFFFF;          /* Pure White Card */
+  --surface-subtle: #F8FAFC;   /* Input & Table Header Background */
+  --surface-hover: #F1F5F9;
+
+  /* Typography */
+  --text-primary: #1E293B;     /* Slate 800 - Crisp readability */
+  --text-secondary: #64748B;   /* Slate 500 - Subtext */
+  --text-muted: #94A3B8;       /* Slate 400 - Placeholders & subtle labels */
+
+  /* Borders & Focus */
+  --border: #E2E8F0;
+  --border-hover: #CBD5E1;
+  --border-focus: #00D084;
+  --focus-ring: rgba(0, 208, 132, 0.18);
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 9999px;
+
+  /* Elevation Shadows */
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+  --shadow-hover: 0 10px 25px -4px rgba(15, 23, 42, 0.08);
+
+  /* Status Colors */
+  --success: #00D084;
+  --success-bg: #E6FBF2;
+  --success-text: #047857;
+  --warning: #F59E0B;
+  --warning-bg: #FEF3C7;
+  --warning-text: #B45309;
+  --error: #EF4444;
+  --error-bg: #FEE2E2;
+  --error-text: #B91C1C;
+
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  --select-arrow-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] {
+  /* Dark Mode Body Canvas & Cards */
+  --bg: #090E17;               /* Deep Obsidian Blue */
+  --surface: #111A2E;          /* Rich Slate Surface */
+  --surface-subtle: #16223B;
+  --surface-hover: #1C2B47;
+
+  --header-bg: #070B13;
+  --header-surface: #111A2E;
+  --header-border: rgba(255, 255, 255, 0.06);
+
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+
+  --border: #1E2D47;
+  --border-hover: #2B3E60;
+  --border-focus: #00D084;
+  --focus-ring: rgba(0, 208, 132, 0.25);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 8px 24px -4px rgba(0, 0, 0, 0.4);
+  --shadow-hover: 0 12px 30px -4px rgba(0, 0, 0, 0.5);
+
+  --success-bg: rgba(0, 208, 132, 0.16);
+  --success-text: #34D399;
+  --warning-bg: rgba(245, 158, 11, 0.16);
+  --warning-text: #FBBF24;
+  --error-bg: rgba(239, 68, 68, 0.16);
+  --error-text: #F87171;
+
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* ==========================================================================
+   2. BASE & RESET STYLES
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* ==========================================================================
+   3. ATTENAD HEADER & NAVIGATION (SHARED ACROSS BOTH PAGES)
+   ========================================================================== */
+.attenad-header {
+  background-color: var(--header-bg);
+  border-bottom: 1px solid var(--header-border);
+  color: var(--header-text);
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+/* Top Navbar Bar (Brand, Tabs, Actions) */
+.attenad-nav-bar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.attenad-nav-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3.5vw, 32px);
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Brand Logo (Green Rounded Icon + Academic Cap) */
+.attenad-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #FFFFFF;
+  flex-shrink: 0;
+}
+
+.brand-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(0, 208, 132, 0.35);
+}
+
+.brand-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.brand-name {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #FFFFFF;
+  white-space: nowrap;
+}
+
+.brand-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(0, 208, 132, 0.12);
+  padding: 2px 7px;
+  border-radius: 12px;
+  margin-left: 2px;
+}
+
+/* Center Navigation Tabs (Attenad Style with Active Green Indicator) */
+.attenad-tabs {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 2.5vw, 28px);
+  height: 100%;
+}
+
+.tab-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 64px;
+  color: var(--header-text-muted);
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  position: relative;
+  transition: color 0.15s ease;
+  white-space: nowrap;
+}
+
+.tab-link:hover {
+  color: #FFFFFF;
+}
+
+.tab-link.active {
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* Green Active Indicator Underline */
+.tab-link.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accent);
+  border-radius: 3px 3px 0 0;
+  box-shadow: 0 -2px 8px rgba(0, 208, 132, 0.6);
+}
+
+/* Right Header Actions (Theme Toggle & Academic Badge) */
+.attenad-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Theme Toggle Button (Icon-Only, Clean Minimalist Circle) */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #E2E8F0;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-appearance: none;
+  user-select: none;
+}
+
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.32);
+  color: #FFFFFF;
+  transform: scale(1.05);
+}
+
+.theme-toggle:active {
+  transform: scale(0.94);
+}
+
+.theme-toggle svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-toggle:hover svg {
+  transform: rotate(15deg);
+}
+
+.icon-sun {
+  display: none;
+}
+
+.icon-moon {
+  display: block;
+}
+
+[data-theme="dark"] .icon-sun {
+  display: block;
+}
+
+[data-theme="dark"] .icon-moon {
+  display: none;
+}
+
+/* Academic Portal Badge */
+.portal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(0, 208, 132, 0.12);
+  border: 1px solid rgba(0, 208, 132, 0.28);
+  color: var(--accent);
+  padding: 6px 13px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.portal-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+/* ==========================================================================
+   4. ATTENAD SUB-BANNER (GREETING & FILTER BAR)
+   ========================================================================== */
+.attenad-sub-banner {
+  background: rgba(19, 29, 49, 0.85);
+  backdrop-filter: blur(8px);
+  padding: clamp(14px, 2.5vw, 20px) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.attenad-sub-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3.5vw, 32px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* Greeting Section */
+.user-greeting {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1E293B 0%, #334E68 100%);
+  border: 2px solid rgba(0, 208, 132, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  flex-shrink: 0;
+}
+
+.avatar-box svg {
+  width: 20px;
+  height: 20px;
+}
+
+.greeting-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.greeting-title {
+  font-size: clamp(16px, 2.5vw, 18px);
+  font-weight: 700;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: -0.01em;
+}
+
+.greeting-title .wave {
+  display: inline-block;
+  transform-origin: 70% 70%;
+}
+
+.greeting-subtitle {
+  font-size: 12.5px;
+  color: var(--header-text-muted);
+  margin-top: 2px;
+}
+
+/* Sub-Controls (Filter Dropdown & Period Pill) */
+.sub-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter-pill-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-pill);
+  padding: 4px 14px 4px 12px;
+  color: #FFFFFF;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.filter-pill-wrap:hover,
+.filter-pill-wrap:focus-within {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: var(--accent);
+}
+
+.pill-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.attenad-select {
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  padding-right: 20px;
+  background-image: var(--select-arrow-light);
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: 14px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.attenad-select option {
+  background-color: #111A2E;
+  color: #F8FAFC;
+  padding: 8px;
+}
+
+.period-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-pill);
+  padding: 7px 14px;
+  color: #CBD5E1;
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.period-pill svg {
+  width: 13px;
+  height: 13px;
+  color: var(--header-text-muted);
+}
+
+/* ==========================================================================
+   5. ATTENAD KPI METRIC CARDS (DASHBOARD)
+   ========================================================================== */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: clamp(20px, 3.5vw, 32px) clamp(16px, 3.5vw, 32px) 60px;
+  flex: 1;
+}
+
+.kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: clamp(14px, 2.5vw, 20px);
+  margin-bottom: clamp(20px, 3vw, 28px);
+}
+
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: clamp(18px, 2.5vw, 24px);
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+/* Icon Box inside KPI Card */
+.kpi-icon-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpi-icon-box svg {
+  width: 20px;
+  height: 20px;
+}
+
+.icon-blue {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563EB;
+}
+
+.icon-amber {
+  background: rgba(245, 158, 11, 0.12);
+  color: #D97706;
+}
+
+.icon-purple {
+  background: rgba(139, 92, 246, 0.12);
+  color: #7C3AED;
+}
+
+.icon-white {
+  background: rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
+}
+
+/* Three-Dots Menu Button */
+.kpi-more-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.kpi-more-btn:hover {
+  background: var(--surface-subtle);
+  color: var(--text-primary);
+}
+
+.kpi-more-btn span {
+  width: 3.5px;
+  height: 3.5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* KPI Value & Label */
+.kpi-card .value {
+  font-size: clamp(28px, 4vw, 36px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.kpi-card .label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   THE SIGNATURE ATTENAD HIGHLIGHT CARD (PRESENT TODAY / TINGKAT KEHADIRAN)
+   ========================================================================== */
+.kpi-card-highlight {
+  background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent) 100%) !important;
+  border-color: transparent !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 12px 28px -4px var(--accent-glow) !important;
+}
+
+.kpi-card-highlight .value {
+  color: #FFFFFF !important;
+}
+
+.kpi-card-highlight .label {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.kpi-card-highlight .kpi-more-btn {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.kpi-card-highlight .kpi-more-btn:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #FFFFFF !important;
+}
+
+/* ==========================================================================
+   6. ATTENAD CHARTS & PANELS (DASHBOARD)
+   ========================================================================== */
+.charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(16px, 2.5vw, 24px);
+  margin-bottom: clamp(20px, 3vw, 28px);
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: clamp(18px, 2.5vw, 24px);
+  box-shadow: var(--shadow-card);
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.panel h2 {
+  font-size: clamp(15px, 2vw, 17px);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+.chart-container {
+  position: relative;
+  height: clamp(260px, 32vw, 320px);
+  width: 100%;
+}
+
+/* History Table Section */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  background-color: var(--surface-subtle);
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+  transition: background-color 0.12s ease;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover td {
+  background-color: var(--surface-hover);
+}
+
+/* Status Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.badge.ok {
+  background-color: var(--success-bg);
+  color: var(--success-text);
+  border: 1px solid rgba(0, 208, 132, 0.3);
+}
+
+.badge.warn {
+  background-color: var(--warning-bg);
+  color: var(--warning-text);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Loading Message / Spinner */
+.pesan {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.pesan-spinner {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: attenadSpin 0.8s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes attenadSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   7. FORM ABSENSI DOSEN (index.html) - ATTENAD CARD STYLE
+   ========================================================================== */
+.page-form-wrapper {
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 40px) clamp(16px, 3.5vw, 24px) 60px;
+  flex: 1;
+}
+
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: clamp(24px, 4.5vw, 36px);
+  box-shadow: var(--shadow-card);
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.form-card-header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 20px;
+  margin-bottom: 24px;
+}
+
+.form-card-header h1 {
+  font-size: clamp(20px, 3.5vw, 23px);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.form-card-header p {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.form-section-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  margin: 24px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-section-title:first-of-type {
+  margin-top: 0;
+}
+
+.section-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-light);
+  color: var(--accent-dark);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+[data-theme="dark"] .section-num {
+  background: rgba(0, 208, 132, 0.16);
+  color: var(--accent);
+}
+
+.field {
+  margin-bottom: clamp(16px, 2.5vw, 20px);
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+label span {
+  color: var(--error);
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+input, select, textarea {
+  width: 100%;
+  height: 46px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border);
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--text-primary);
+  background-color: var(--surface-subtle);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.25s ease;
+}
+
+input:hover, select:hover, textarea:hover {
+  border-color: var(--border-hover);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+  background-color: var(--surface);
+}
+
+select {
+  padding-right: 36px;
+  background-image: var(--select-arrow);
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 15px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+textarea {
+  height: auto;
+  min-height: 94px;
+  resize: vertical;
+  line-height: 1.5;
+  padding-top: 12px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+/* Submit Button - Signature Mint Gradient */
+button[type="submit"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 48px;
+  padding: 0 24px;
+  background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent) 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14.5px;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  margin-top: 10px;
+  box-shadow: 0 8px 20px -2px var(--accent-glow);
+  transition: transform 0.1s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+button[type="submit"]:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -2px rgba(0, 208, 132, 0.45);
+}
+
+button[type="submit"]:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+button[type="submit"]:disabled {
+  background: #94A3B8;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+button[type="submit"]:disabled::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 9px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #FFFFFF;
+  border-radius: 50%;
+  animation: attenadSpin 0.7s linear infinite;
+}
+
+/* Status Notifications */
+.status {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  font-weight: 500;
+  display: none;
+  line-height: 1.45;
+}
+
+.status.ok {
+  display: block;
+  background-color: var(--success-bg);
+  border: 1px solid rgba(0, 208, 132, 0.3);
+  color: var(--success-text);
+}
+
+.status.err {
+  display: block;
+  background-color: var(--error-bg);
+  border: 1px solid var(--error);
+  color: var(--error-text);
+}
+
+/* ==========================================================================
+   8. FOOTER
+   ========================================================================== */
+.footer {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  padding: 24px 16px 40px;
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  background-color: var(--surface);
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+.footer span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-top: 3px;
+}
+
+/* ==========================================================================
+   9. RESPONSIVE BREAKDOWN (MOBILE, TABLET, DESKTOP)
+   ========================================================================== */
+@media (max-width: 960px) {
+  .charts {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .attenad-nav-inner {
+    height: auto;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .attenad-tabs {
+    order: 3;
+    width: 100%;
+    height: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 6px;
+    gap: 20px;
+  }
+
+  .tab-link {
+    height: 40px;
+  }
+
+  .attenad-sub-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .sub-controls {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .portal-badge {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi {
+    grid-template-columns: 1fr;
+  }
+
+  .form-card {
+    padding: 20px 16px;
+    border-radius: 12px;
+  }
+
+  .attenad-brand .brand-name {
+    font-size: 14.5px;
+  }
+
+  .filter-pill-wrap {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .attenad-select {
+    width: 100%;
+  }
+
+  .period-pill {
+    width: 100%;
+    justify-content: center;
+  }
+}

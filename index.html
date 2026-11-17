@@ -26,809 +26,194 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <style>
-    :root {
-      /* Palette: Professional Academic & Corporate UI (Light Mode) */
-      --primary: #102A43;        /* Deep Navy Blue */
-      --primary-hover: #1A365D;  /* Refined Navy Hover */
-      --primary-active: #0C1E31; /* Dark Navy Active */
-      --primary-tint: #F0F4F8;   /* Soft Navy Tint */
-      
-      --bg: #F8FAFC;             /* Soft Off-White Canvas */
-      --surface: #FFFFFF;        /* Pure White Card */
-      --surface-subtle: #F8FAFC; /* Subtle Gray Background */
-      
-      --text-primary: #243447;   /* Dark Slate */
-      --text-secondary: #718096; /* Muted Gray */
-      --text-muted: #94A3B8;     /* Soft Placeholder Gray */
-      
-      --border: #E2E8F0;         /* Soft Gray Border */
-      --border-hover: #CBD5E1;   /* Hover Border */
-      --border-focus: #102A43;   /* Focus Border */
-      --focus-ring: rgba(16, 42, 67, 0.08); /* Subtle Focus Ring */
-      
-      --success-text: #065F46;   /* Soft Dark Green */
-      --success-bg: #ECFDF5;     /* Soft Green Background */
-      --success-border: #A7F3D0; /* Soft Green Border */
-      
-      --error-text: #991B1B;     /* Soft Dark Red */
-      --error-bg: #FEF2F2;       /* Soft Red Background */
-      --error-border: #FECACA;   /* Soft Red Border */
-      
-      --radius-sm: 6px;
-      --radius-md: 8px;
-      --radius-lg: 12px;
-      
-      --shadow-sm: 0 1px 2px 0 rgba(16, 42, 67, 0.04);
-      --shadow-card: 0 12px 32px -4px rgba(16, 42, 67, 0.08), 0 4px 12px -2px rgba(16, 42, 67, 0.03);
-      
-      --dot-color: rgba(30, 41, 59, 0.075);
-      --ambient-glow: rgba(16, 42, 67, 0.08);
-      --top-accent: linear-gradient(90deg, #102A43 0%, #2B6CB0 50%, #102A43 100%);
-      --header-bg: #102A43;
-      --header-border: #334E68;
-    }
-
-    [data-theme="dark"] {
-      /* Palette: Refined Institutional Dark Mode */
-      --primary: #1D4ED8;        /* Professional Academic Blue */
-      --primary-hover: #2563EB;
-      --primary-active: #1E40AF;
-      --primary-tint: #1E293B;
-      
-      --bg: #0B1120;             /* Deep Rich Slate Background */
-      --surface: #111B2E;        /* Dark Elegant Surface */
-      --surface-subtle: #17243B;
-      
-      --text-primary: #F1F5F9;   /* Off-White Crisp Text */
-      --text-secondary: #94A3B8; /* Muted Slate */
-      --text-muted: #64748B;     /* Subdued Gray */
-      
-      --border: #1E2D44;         /* Sleek Dark Border */
-      --border-hover: #2E4263;
-      --border-focus: #3B82F6;
-      --focus-ring: rgba(59, 130, 246, 0.16);
-      
-      --success-text: #34D399;
-      --success-bg: rgba(6, 95, 70, 0.28);
-      --success-border: rgba(52, 211, 153, 0.35);
-      
-      --error-text: #F87171;
-      --error-bg: rgba(153, 27, 27, 0.28);
-      --error-border: rgba(248, 113, 113, 0.35);
-      
-      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-      --shadow-card: 0 16px 36px -6px rgba(0, 0, 0, 0.5), 0 4px 16px -2px rgba(0, 0, 0, 0.3);
-      
-      --dot-color: rgba(148, 163, 184, 0.08);
-      --ambient-glow: rgba(30, 58, 95, 0.25);
-      --top-accent: linear-gradient(90deg, #1E3A5F 0%, #3B82F6 50%, #1E3A5F 100%);
-      --header-bg: #0D1626;
-      --header-border: #233550;
-    }
-
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    /* Sleek Institutional Top Accent Bar */
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: var(--top-accent);
-      z-index: 1000;
-      transition: background 0.3s ease;
-    }
-
-    body {
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg);
-      background-image: 
-        radial-gradient(ellipse 90% 520px at 50% -40px, var(--ambient-glow) 0%, transparent 100%),
-        radial-gradient(circle at 1px 1px, var(--dot-color) 1px, transparent 0);
-      background-size: 100% 100%, 24px 24px;
-      background-position: center top;
-      background-repeat: no-repeat, repeat;
-      color: var(--text-primary);
-      min-height: 100vh;
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: clamp(20px, 4vw, 44px) clamp(12px, 3.5vw, 24px) clamp(36px, 5vw, 56px);
-      padding-top: max(clamp(20px, 4vw, 44px), env(safe-area-inset-top));
-      padding-bottom: max(clamp(36px, 5vw, 56px), env(safe-area-inset-bottom));
-      padding-left: max(clamp(12px, 3.5vw, 24px), env(safe-area-inset-left));
-      padding-right: max(clamp(12px, 3.5vw, 24px), env(safe-area-inset-right));
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      overflow-x: hidden;
-      transition: background-color 0.25s ease, color 0.25s ease;
-    }
-
-    .wrapper {
-      width: 100%;
-      max-width: 680px;
-      min-width: 0;
-      margin: 0 auto;
-    }
-
-    /* ==========================================================================
-       Header Component & Theme Toggle
-       ========================================================================== */
-    .header {
-      background: var(--header-bg);
-      color: #FFFFFF;
-      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-      padding: clamp(22px, 4vw, 32px) clamp(18px, 4.5vw, 36px);
-      position: relative;
-      border-top: 3px solid var(--header-border);
-      box-shadow: 0 4px 20px -2px rgba(16, 42, 67, 0.12);
-      transition: background-color 0.25s ease, border-color 0.25s ease;
-    }
-
-    .header-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
-    .header-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      padding: 4px 10px;
-      border-radius: var(--radius-sm);
-      font-size: 11.5px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: #E2E8F0;
-      min-width: 0;
-      white-space: nowrap;
-    }
-
-    .header-badge svg {
-      width: 14px;
-      height: 14px;
-      fill: currentColor;
-      flex-shrink: 0;
-    }
-
-    /* Theme Toggle Button */
-    .theme-toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      color: #E2E8F0;
-      padding: 5px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
-      -webkit-appearance: none;
-      user-select: none;
-    }
-
-    .theme-toggle:hover {
-      background: rgba(255, 255, 255, 0.18);
-      border-color: rgba(255, 255, 255, 0.32);
-      color: #FFFFFF;
-    }
-
-    .theme-toggle:active {
-      transform: scale(0.96);
-    }
-
-    .theme-toggle svg {
-      width: 14px;
-      height: 14px;
-      flex-shrink: 0;
-    }
-
-    .icon-sun {
-      display: none;
-    }
-
-    .icon-moon {
-      display: block;
-    }
-
-    [data-theme="dark"] .icon-sun {
-      display: block;
-    }
-
-    [data-theme="dark"] .icon-moon {
-      display: none;
-    }
-
-    .header h1 {
-      font-size: clamp(19px, 4vw, 22px);
-      font-weight: 700;
-      color: #FFFFFF;
-      letter-spacing: -0.015em;
-      margin-bottom: 6px;
-      line-height: 1.25;
-    }
-
-    .header p {
-      font-size: clamp(12.5px, 2.5vw, 13.5px);
-      color: #CBD5E1;
-      font-weight: 400;
-      line-height: 1.45;
-    }
-
-    /* ==========================================================================
-       Card & Form Container
-       ========================================================================== */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-top: none;
-      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-      padding: clamp(24px, 4.5vw, 36px) clamp(18px, 4.5vw, 36px) clamp(28px, 5vw, 40px);
-      box-shadow: var(--shadow-card);
-      transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-    }
-
-    /* Section Grouping */
-    .form-section-title {
-      font-size: 11.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--text-secondary);
-      margin-bottom: 20px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: color 0.25s ease, border-color 0.25s ease;
-    }
-
-    .form-section-title:not(:first-of-type) {
-      margin-top: 30px;
-    }
-
-    /* Field Layout */
-    .field {
-      margin-bottom: clamp(16px, 2.5vw, 20px);
-      min-width: 0;
-    }
-
-    .field:last-child {
-      margin-bottom: 0;
-    }
-
-    label {
-      display: block;
-      font-size: 13.5px;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 7px;
-      transition: color 0.25s ease;
-    }
-
-    label span {
-      color: #DC2626;
-      font-weight: 700;
-      margin-left: 2px;
-    }
-
-    /* ==========================================================================
-       Input Controls
-       ========================================================================== */
-    input[type="text"],
-    input[type="date"],
-    input[type="url"],
-    select,
-    textarea {
-      width: 100%;
-      height: 44px;
-      padding: 0 14px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      font-size: 14.5px;
-      font-family: inherit;
-      color: var(--text-primary);
-      background-color: var(--surface);
-      box-sizing: border-box;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.25s ease, color 0.25s ease;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
-    }
-
-    input::placeholder,
-    textarea::placeholder {
-      color: var(--text-muted);
-      opacity: 1;
-    }
-
-    input:hover,
-    select:hover,
-    textarea:hover {
-      border-color: var(--border-hover);
-    }
-
-    input:focus,
-    select:focus,
-    textarea:focus {
-      outline: none;
-      border-color: var(--border-focus);
-      box-shadow: 0 0 0 3px var(--focus-ring);
-    }
-
-    /* Custom Dropdown Chevron */
-    select {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 14px center;
-      background-size: 16px;
-      padding-right: 40px;
-      cursor: pointer;
-    }
-
-    [data-theme="dark"] select {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    }
-
-    select option {
-      background-color: var(--surface);
-      color: var(--text-primary);
-    }
-
-    /* Textarea Controls */
-    textarea {
-      height: auto;
-      min-height: clamp(88px, 15vh, 104px);
-      padding: 12px 14px;
-      line-height: 1.55;
-      resize: vertical;
-    }
-
-    /* Date Input */
-    input[type="date"] {
-      min-height: 44px;
-      display: inline-flex;
-      align-items: center;
-      cursor: pointer;
-    }
-
-    [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
-      filter: invert(0.85);
-    }
-
-    /* 2-Column Responsive Row */
-    .row {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: clamp(14px, 2.5vw, 18px);
-    }
-
-    .row .field {
-      margin-bottom: clamp(16px, 2.5vw, 20px);
-    }
-
-    .hint {
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-top: 6px;
-      line-height: 1.4;
-      word-break: break-word;
-      transition: color 0.25s ease;
-    }
-
-    /* ==========================================================================
-       Submit Button & Loading State
-       ========================================================================== */
-    button[type="submit"] {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 46px;
-      padding: 0 20px;
-      background-color: var(--primary);
-      color: #FFFFFF;
-      border: 1px solid transparent;
-      border-radius: var(--radius-md);
-      font-size: 14.5px;
-      font-weight: 600;
-      font-family: inherit;
-      letter-spacing: 0.01em;
-      cursor: pointer;
-      margin-top: 10px;
-      box-sizing: border-box;
-      box-shadow: var(--shadow-sm);
-      transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
-    }
-
-    button[type="submit"]:hover:not(:disabled) {
-      background-color: var(--primary-hover);
-      box-shadow: 0 4px 12px rgba(16, 42, 67, 0.12);
-    }
-
-    button[type="submit"]:active:not(:disabled) {
-      background-color: var(--primary-active);
-      transform: translateY(1px);
-    }
-
-    button[type="submit"]:disabled {
-      background-color: #94A3B8;
-      cursor: not-allowed;
-      opacity: 0.85;
-      box-shadow: none;
-      transform: none;
-    }
-
-    button[type="submit"]:disabled::before {
-      content: "";
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      margin-right: 9px;
-      border: 2px solid rgba(255, 255, 255, 0.35);
-      border-top-color: #FFFFFF;
-      border-radius: 50%;
-      animation: btnSpin 0.7s linear infinite;
-    }
-
-    @keyframes btnSpin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* ==========================================================================
-       Status & Notifications
-       ========================================================================== */
-    .status {
-      margin-top: 18px;
-      padding: 13px 16px;
-      border-radius: var(--radius-md);
-      font-size: 13.5px;
-      font-weight: 500;
-      line-height: 1.45;
-      display: none;
-      align-items: center;
-      word-break: break-word;
-      animation: fadeIn 0.2s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-4px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .status.ok {
-      display: flex;
-      background-color: var(--success-bg);
-      color: var(--success-text);
-      border: 1px solid var(--success-border);
-    }
-
-    .status.ok::before {
-      content: "";
-      display: inline-block;
-      width: 18px;
-      height: 18px;
-      margin-right: 10px;
-      flex-shrink: 0;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23065F46'%3E%3Cpath fill-rule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z' clip-rule='evenodd'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-size: contain;
-    }
-
-    [data-theme="dark"] .status.ok::before {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2334D399'%3E%3Cpath fill-rule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z' clip-rule='evenodd'/%3E%3C/svg%3E");
-    }
-
-    .status.err {
-      display: flex;
-      background-color: var(--error-bg);
-      color: var(--error-text);
-      border: 1px solid var(--error-border);
-    }
-
-    .status.err::before {
-      content: "";
-      display: inline-block;
-      width: 18px;
-      height: 18px;
-      margin-right: 10px;
-      flex-shrink: 0;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23991B1B'%3E%3Cpath fill-rule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z' clip-rule='evenodd'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-size: contain;
-    }
-
-    [data-theme="dark"] .status.err::before {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23F87171'%3E%3Cpath fill-rule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z' clip-rule='evenodd'/%3E%3C/svg%3E");
-    }
-
-    /* ==========================================================================
-       Footer Metadata
-       ========================================================================== */
-    .footer {
-      text-align: center;
-      margin-top: 24px;
-      font-size: 12px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-      transition: color 0.25s ease;
-    }
-
-    .footer span {
-      display: block;
-      color: var(--text-muted);
-      font-size: 11px;
-      margin-top: 2px;
-      transition: color 0.25s ease;
-    }
-
-    /* ==========================================================================
-       Comprehensive Responsive System (Mobile, Tablet, Laptop, Desktop)
-       ========================================================================== */
-    /* Tablet & Small Laptop (<= 768px) */
-    @media (max-width: 768px) {
-      .header h1 {
-        font-size: 20px;
-      }
-    }
-
-    /* Mobile Phablets & Smartphones (<= 640px) */
-    @media (max-width: 640px) {
-      .header-badge {
-        font-size: 11px;
-        padding: 3px 8px;
-      }
-
-      .theme-toggle {
-        padding: 4px 10px;
-        font-size: 11.5px;
-      }
-
-      .header h1 {
-        font-size: 19px;
-      }
-
-      .header p {
-        font-size: 13px;
-      }
-
-      .row {
-        grid-template-columns: 1fr;
-        gap: 0;
-      }
-
-      .row .field {
-        margin-bottom: 18px;
-      }
-
-      /* 16px font-size prevents unwanted iOS Safari zoom on focus */
-      input[type="text"],
-      input[type="date"],
-      input[type="url"],
-      select,
-      textarea {
-        font-size: 16px;
-        height: 46px;
-      }
-
-      input[type="date"] {
-        min-height: 46px;
-      }
-
-      textarea {
-        min-height: 92px;
-      }
-
-      button[type="submit"] {
-        height: 48px;
-        font-size: 15px;
-      }
-    }
-
-    /* Compact Mobile Screens (<= 400px, e.g. iPhone SE, 360px phones) */
-    @media (max-width: 400px) {
-      .header-top {
-        gap: 8px;
-      }
-
-      .header-badge {
-        font-size: 10px;
-        padding: 3px 7px;
-        letter-spacing: 0.03em;
-      }
-
-      .header-badge svg {
-        width: 12px;
-        height: 12px;
-      }
-
-      .theme-toggle {
-        padding: 4px 8px;
-        font-size: 11px;
-      }
-
-      .header h1 {
-        font-size: 18px;
-      }
-
-      .header p {
-        font-size: 12.5px;
-      }
-    }
-
-    /* Ultra-compact screens (<= 360px) */
-    @media (max-width: 360px) {
-      .theme-toggle-text {
-        display: none;
-      }
-
-      .theme-toggle {
-        width: 32px;
-        height: 32px;
-        padding: 0;
-        justify-content: center;
-        border-radius: 50%;
-      }
-
-      .form-section-title {
-        font-size: 10.5px;
-      }
-    }
-
-    /* Mobile Landscape Optimization */
-    @media (max-height: 500px) and (orientation: landscape) {
-      body {
-        padding-top: max(16px, env(safe-area-inset-top));
-        padding-bottom: max(24px, env(safe-area-inset-bottom));
-      }
-
-      .header {
-        padding: 18px 24px 16px;
-      }
-
-      .card {
-        padding: 20px 24px 24px;
-      }
-    }
-  </style>
+  <!-- External Stylesheet (Unified Attenad Design System) -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="wrapper">
-  <header class="header">
-    <div class="header-top">
-      <div class="header-badge">
-        <svg viewBox="0 0 24 24">
-          <path d="M12 3L1 9L12 15L21 10.09V17H23V9M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z"/>
-        </svg>
-        Sistem Informasi Akademik
-      </div>
 
-      <!-- Dark / Light Mode Toggle Button -->
-      <button type="button" id="themeToggle" class="theme-toggle" aria-label="Ganti mode tampilan" title="Beralih ke Mode Gelap">
-        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="5"></circle>
-          <line x1="12" y1="1" x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1" y1="12" x2="3" y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
-        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-        <span class="theme-toggle-text">Gelap</span>
-      </button>
+  <!-- Attenad Modern Institutional Header -->
+  <header class="attenad-header">
+    <div class="attenad-nav-bar">
+      <div class="attenad-nav-inner">
+        <!-- Brand Logo -->
+        <a href="index.html" class="attenad-brand" title="Sistem Informasi Akademik Politeknik IDN Bogor">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3L1 9L12 15L21 10.09V17H23V9M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z"/>
+            </svg>
+          </div>
+          <span class="brand-name">Politeknik IDN</span>
+          <span class="brand-tag">Akademik</span>
+        </a>
+
+        <!-- Center Tabs (Active on Form Absensi) -->
+        <nav class="attenad-tabs" aria-label="Navigasi Halaman">
+          <a href="index.html" class="tab-link active" aria-current="page">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            <span>Form Absensi</span>
+          </a>
+          <a href="dashboard.html" class="tab-link">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="9"></rect>
+              <rect x="14" y="3" width="7" height="5"></rect>
+              <rect x="14" y="12" width="7" height="9"></rect>
+              <rect x="3" y="16" width="7" height="5"></rect>
+            </svg>
+            <span>Dashboard</span>
+          </a>
+        </nav>
+
+        <!-- Right Utilities (Theme Toggle & Academic Badge) -->
+        <div class="attenad-actions">
+          <!-- Dark / Light Mode Toggle Button (Icon Only) -->
+          <button type="button" id="themeToggle" class="theme-toggle" aria-label="Ganti mode tampilan" title="Beralih ke Mode Gelap">
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+
+          <div class="portal-badge">
+            <span class="portal-dot"></span>
+            <span>Portal Dosen</span>
+          </div>
+        </div>
+      </div>
     </div>
-    <h1>Form Absensi Dosen</h1>
-    <p>Politeknik IDN Bogor. Isi setiap kali selesai mengajar.</p>
+
+    <!-- Sub-header Greeting Banner -->
+    <div class="attenad-sub-banner">
+      <div class="attenad-sub-inner">
+        <div class="user-greeting">
+          <div class="avatar-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div class="greeting-text">
+            <div class="greeting-title">Formulir Absensi Perkuliahan <span class="wave">✍️</span></div>
+            <p class="greeting-subtitle">Politeknik IDN Bogor &bull; Silakan isi formulir setiap kali selesai melaksanakan pengajaran.</p>
+          </div>
+        </div>
+
+        <div class="sub-controls">
+          <div class="period-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="18" y2="10"></line>
+            </svg>
+            <span>Semester Ganjil 2026/2027</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </header>
 
-  <main class="card">
-    <form id="formAbsensi">
-      <!-- Section 1: Informasi Akademik -->
-      <div class="form-section-title">
-        Informasi Akademik
+  <!-- Main Form Content -->
+  <main class="page-form-wrapper">
+    <div class="form-card">
+      <div class="form-card-header">
+        <h1>Form Absensi Dosen</h1>
+        <p>Pastikan seluruh data perkuliahan terisi dengan valid sebelum mengirimkan absensi.</p>
       </div>
 
-      <div class="field">
-        <label for="dosen">Dosen Pengampu <span>*</span></label>
-        <select id="dosen" required></select>
-      </div>
-
-      <div class="field">
-        <label for="mataKuliah">Mata Kuliah <span>*</span></label>
-        <select id="mataKuliah" required></select>
-      </div>
-
-      <div class="row">
-        <div class="field">
-          <label for="pertemuan">Pertemuan Ke- <span>*</span></label>
-          <select id="pertemuan" required></select>
+      <form id="formAbsensi">
+        <!-- Section 1: Informasi Akademik -->
+        <div class="form-section-title">
+          <span class="section-num">01</span>
+          Informasi Akademik
         </div>
+
         <div class="field">
-          <label for="tanggal">Tanggal Masuk <span>*</span></label>
-          <input type="date" id="tanggal" required>
+          <label for="dosen">Dosen Pengampu <span>*</span></label>
+          <select id="dosen" required></select>
         </div>
-      </div>
 
-      <!-- Section 2: Pelaksanaan Perkuliahan -->
-      <div class="form-section-title">
-        Pelaksanaan Perkuliahan
-      </div>
-
-      <div class="field">
-        <label for="materi">Materi Ajar <span>*</span></label>
-        <textarea id="materi" required placeholder="Contoh: Use Case Diagram & Data Flow Diagram (DFD)"></textarea>
-      </div>
-
-      <div class="row">
         <div class="field">
-          <label for="statusKehadiran">Status Kehadiran <span>*</span></label>
-          <select id="statusKehadiran" required>
-            <option value="Hadir">Hadir</option>
-            <option value="Terlambat">Terlambat</option>
-            <option value="Izin">Izin</option>
-            <option value="Sakit">Sakit</option>
-            <option value="Tidak Hadir">Tidak Hadir</option>
-          </select>
+          <label for="mataKuliah">Mata Kuliah <span>*</span></label>
+          <select id="mataKuliah" required></select>
         </div>
-        <div class="field">
-          <label for="linkBukti">Link Bukti Kelas <span>*</span></label>
-          <input type="url" id="linkBukti" required placeholder="https://drive.google.com/...">
-          <div class="hint">Tautan foto, dokumen, atau screenshot bukti kelas.</div>
-        </div>
-      </div>
 
-      <button type="submit" id="btnSubmit">Kirim Absensi</button>
-      <div id="status" class="status"></div>
-    </form>
+        <div class="row">
+          <div class="field">
+            <label for="pertemuan">Pertemuan Ke- <span>*</span></label>
+            <select id="pertemuan" required></select>
+          </div>
+          <div class="field">
+            <label for="tanggal">Tanggal Masuk <span>*</span></label>
+            <input type="date" id="tanggal" required>
+          </div>
+        </div>
+
+        <!-- Section 2: Pelaksanaan Perkuliahan -->
+        <div class="form-section-title">
+          <span class="section-num">02</span>
+          Pelaksanaan Perkuliahan
+        </div>
+
+        <div class="field">
+          <label for="materi">Materi Ajar <span>*</span></label>
+          <textarea id="materi" required placeholder="Contoh: Use Case Diagram & Data Flow Diagram (DFD)"></textarea>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="statusKehadiran">Status Kehadiran <span>*</span></label>
+            <select id="statusKehadiran" required>
+              <option value="Hadir">Hadir</option>
+              <option value="Terlambat">Terlambat</option>
+              <option value="Izin">Izin</option>
+              <option value="Sakit">Sakit</option>
+              <option value="Tidak Hadir">Tidak Hadir</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="linkBukti">Link Bukti Kelas <span>*</span></label>
+            <input type="url" id="linkBukti" required placeholder="https://drive.google.com/...">
+            <div class="hint">Tautan foto, dokumen, atau screenshot bukti kelas.</div>
+          </div>
+        </div>
+
+        <button type="submit" id="btnSubmit">Kirim Absensi</button>
+        <div id="status" class="status"></div>
+      </form>
+    </div>
   </main>
 
   <footer class="footer">
-    Politeknik IDN Bogor
+    Politeknik IDN Bogor &bull; Portal Administrasi Pengajaran
     <span>Pastikan seluruh data terisi dengan valid sebelum mengirimkan absensi.</span>
   </footer>
-</div>
 
 <script>
   // ====== THEME TOGGLE (DARK / LIGHT) ======
   const themeToggle = document.getElementById('themeToggle');
-  const themeText = themeToggle ? themeToggle.querySelector('.theme-toggle-text') : null;
 
   function updateToggleUI(theme) {
-    if (themeText) {
-      themeText.textContent = theme === 'dark' ? 'Terang' : 'Gelap';
-    }
     if (themeToggle) {
-      themeToggle.setAttribute('title', theme === 'dark' ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap');
+      const isDark = theme === 'dark';
+      themeToggle.setAttribute('title', isDark ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap');
+      themeToggle.setAttribute('aria-label', isDark ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap');
     }
   }
 
-  // Sinkronisasi teks tombol dengan tema aktif saat inisialisasi
+  // Sinkronisasi status tombol saat inisialisasi
   const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
   updateToggleUI(currentTheme);
 
