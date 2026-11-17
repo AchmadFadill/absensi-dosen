@@ -427,8 +427,9 @@ body {
   flex-wrap: wrap;
 }
 
-/* Professional Lecturer Filter Pill */
-.filter-dropdown-wrap {
+/* Professional Lecturer Filter Pill (Self-contained, bulletproof) */
+.filter-dropdown-wrap,
+.filter-pill-wrap {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -436,92 +437,88 @@ body {
   box-sizing: border-box;
 }
 
-.filter-dropdown-wrap .pill-icon {
+.filter-dropdown-wrap .pill-icon,
+.filter-pill-wrap .pill-icon {
   position: absolute;
   left: 13px;
-  width: 15px;
-  height: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px !important;
+  height: 15px !important;
+  max-width: 15px !important;
+  max-height: 15px !important;
   color: var(--accent);
   pointer-events: none;
   z-index: 2;
-  transition: color 0.15s ease, transform 0.15s ease;
+  transition: color 0.15s ease;
 }
 
-.filter-dropdown-wrap .pill-arrow {
-  position: absolute;
-  right: 13px;
-  width: 13px;
-  height: 13px;
-  color: var(--header-text-muted);
-  pointer-events: none;
-  z-index: 2;
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
-}
-
-.filter-dropdown-select {
-  height: 38px;
-  padding: 0 34px 0 38px;
-  background-color: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: var(--radius-pill);
-  color: #FFFFFF;
-  font-size: 13px;
-  font-weight: 600;
-  font-family: inherit;
-  outline: none;
-  cursor: pointer;
-  min-width: 210px;
-  max-width: 300px;
+#filterDosen,
+.filter-dropdown-select,
+.attenad-select {
+  height: 38px !important;
+  padding: 0 36px 0 38px !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23CBD5E1' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  background-size: 14px !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: var(--radius-pill) !important;
+  color: #FFFFFF !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  font-family: inherit !important;
+  outline: none !important;
+  cursor: pointer !important;
+  min-width: 200px;
+  max-width: 280px;
   text-overflow: ellipsis;
   white-space: nowrap;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
   transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
 }
 
-.filter-dropdown-select:hover {
-  background-color: rgba(255, 255, 255, 0.13);
-  border-color: rgba(255, 255, 255, 0.28);
+#filterDosen:hover,
+.filter-dropdown-select:hover,
+.attenad-select:hover {
+  background-color: rgba(255, 255, 255, 0.13) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
 }
 
-.filter-dropdown-select:hover ~ .pill-arrow {
+#filterDosen:focus,
+.filter-dropdown-select:focus,
+.attenad-select:focus {
+  border-color: var(--accent) !important;
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 0 0 3px rgba(0, 208, 132, 0.22) !important;
+}
+
+.filter-dropdown-wrap:focus-within .pill-icon,
+.filter-pill-wrap:focus-within .pill-icon {
   color: #FFFFFF;
-}
-
-.filter-dropdown-select:focus {
-  border-color: var(--accent);
-  background-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 0 3px rgba(0, 208, 132, 0.22);
-}
-
-.filter-dropdown-wrap:focus-within .pill-arrow {
-  color: var(--accent);
-  transform: rotate(180deg);
-}
-
-.filter-dropdown-wrap:focus-within .pill-icon {
-  color: #FFFFFF;
-  transform: scale(1.05);
 }
 
 /* Active filter state - when a specific lecturer is selected */
-.filter-dropdown-wrap.has-filter .filter-dropdown-select {
-  background-color: rgba(0, 208, 132, 0.15);
-  border-color: var(--accent);
-  color: #FFFFFF;
-  box-shadow: 0 0 12px rgba(0, 208, 132, 0.25);
-}
-
-.filter-dropdown-wrap.has-filter .pill-icon {
-  color: var(--accent);
+.filter-dropdown-wrap.has-filter #filterDosen,
+.filter-dropdown-wrap.has-filter .filter-dropdown-select,
+.filter-pill-wrap.has-filter .attenad-select {
+  background-color: rgba(0, 208, 132, 0.15) !important;
+  border-color: var(--accent) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 12px rgba(0, 208, 132, 0.25) !important;
 }
 
 /* Native Option List Styling */
-.filter-dropdown-select option {
-  background-color: #0F172A;
-  color: #F8FAFC;
+#filterDosen option,
+.filter-dropdown-select option,
+.attenad-select option {
+  background-color: #0F172A !important;
+  color: #F8FAFC !important;
   padding: 10px 14px;
   font-size: 13px;
   font-weight: 500;
@@ -923,7 +920,12 @@ label span {
   margin-left: 2px;
 }
 
-input, select, textarea {
+.form-card input,
+.form-card select,
+.form-card textarea,
+#formAbsensi input,
+#formAbsensi select,
+#formAbsensi textarea {
   width: 100%;
   height: 46px;
   padding: 10px 14px;
@@ -938,17 +940,28 @@ input, select, textarea {
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.25s ease;
 }
 
-input:hover, select:hover, textarea:hover {
+.form-card input:hover,
+.form-card select:hover,
+.form-card textarea:hover,
+#formAbsensi input:hover,
+#formAbsensi select:hover,
+#formAbsensi textarea:hover {
   border-color: var(--border-hover);
 }
 
-input:focus, select:focus, textarea:focus {
+.form-card input:focus,
+.form-card select:focus,
+.form-card textarea:focus,
+#formAbsensi input:focus,
+#formAbsensi select:focus,
+#formAbsensi textarea:focus {
   border-color: var(--border-focus);
   box-shadow: 0 0 0 3px var(--focus-ring);
   background-color: var(--surface);
 }
 
-select {
+.form-card select,
+#formAbsensi select {
   padding-right: 36px;
   background-image: var(--select-arrow);
   background-repeat: no-repeat;
@@ -1146,11 +1159,14 @@ button[type="submit"]:disabled::before {
     font-size: 14.5px;
   }
 
-  .filter-dropdown-wrap {
+  .filter-dropdown-wrap,
+  .filter-pill-wrap {
     width: 100%;
   }
 
-  .filter-dropdown-select {
+  #filterDosen,
+  .filter-dropdown-select,
+  .attenad-select {
     width: 100%;
     max-width: 100%;
     min-width: 0;
