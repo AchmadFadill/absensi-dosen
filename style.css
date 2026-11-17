@@ -152,9 +152,9 @@ body {
   margin: 0 auto;
   padding: 0 clamp(16px, 3.5vw, 32px);
   height: 64px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
 }
 
@@ -166,6 +166,7 @@ body {
   text-decoration: none;
   color: #FFFFFF;
   flex-shrink: 0;
+  justify-self: start;
 }
 
 .brand-icon {
@@ -203,12 +204,14 @@ body {
   margin-left: 2px;
 }
 
-/* Center Navigation Tabs (Attenad Style with Active Green Indicator) */
+/* Center Navigation Tabs (Attenad Style - Exactly Dead Center) */
 .attenad-tabs {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: clamp(12px, 2.5vw, 28px);
   height: 100%;
+  justify-self: center;
 }
 
 .tab-link {
@@ -251,8 +254,10 @@ body {
 .attenad-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
   flex-shrink: 0;
+  justify-self: end;
 }
 
 /* Theme Toggle Button (Icon-Only, Clean Minimalist Circle) */
@@ -422,74 +427,128 @@ body {
   flex-wrap: wrap;
 }
 
-.filter-pill-wrap {
+/* Professional Lecturer Filter Pill */
+.filter-dropdown-wrap {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.08);
+  height: 38px;
+  box-sizing: border-box;
+}
+
+.filter-dropdown-wrap .pill-icon {
+  position: absolute;
+  left: 13px;
+  width: 15px;
+  height: 15px;
+  color: var(--accent);
+  pointer-events: none;
+  z-index: 2;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.filter-dropdown-wrap .pill-arrow {
+  position: absolute;
+  right: 13px;
+  width: 13px;
+  height: 13px;
+  color: var(--header-text-muted);
+  pointer-events: none;
+  z-index: 2;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
+}
+
+.filter-dropdown-select {
+  height: 38px;
+  padding: 0 34px 0 38px;
+  background-color: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: var(--radius-pill);
-  padding: 4px 14px 4px 12px;
-  color: #FFFFFF;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
-}
-
-.filter-pill-wrap:hover,
-.filter-pill-wrap:focus-within {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: var(--accent);
-}
-
-.pill-icon {
-  width: 14px;
-  height: 14px;
-  color: var(--accent);
-  flex-shrink: 0;
-}
-
-.attenad-select {
-  background: transparent;
-  border: none;
   color: #FFFFFF;
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
   outline: none;
   cursor: pointer;
-  padding-right: 20px;
-  background-image: var(--select-arrow-light);
-  background-repeat: no-repeat;
-  background-position: right center;
-  background-size: 14px;
+  min-width: 210px;
+  max-width: 300px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
 }
 
-.attenad-select option {
-  background-color: #111A2E;
+.filter-dropdown-select:hover {
+  background-color: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.filter-dropdown-select:hover ~ .pill-arrow {
+  color: #FFFFFF;
+}
+
+.filter-dropdown-select:focus {
+  border-color: var(--accent);
+  background-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(0, 208, 132, 0.22);
+}
+
+.filter-dropdown-wrap:focus-within .pill-arrow {
+  color: var(--accent);
+  transform: rotate(180deg);
+}
+
+.filter-dropdown-wrap:focus-within .pill-icon {
+  color: #FFFFFF;
+  transform: scale(1.05);
+}
+
+/* Active filter state - when a specific lecturer is selected */
+.filter-dropdown-wrap.has-filter .filter-dropdown-select {
+  background-color: rgba(0, 208, 132, 0.15);
+  border-color: var(--accent);
+  color: #FFFFFF;
+  box-shadow: 0 0 12px rgba(0, 208, 132, 0.25);
+}
+
+.filter-dropdown-wrap.has-filter .pill-icon {
+  color: var(--accent);
+}
+
+/* Native Option List Styling */
+.filter-dropdown-select option {
+  background-color: #0F172A;
   color: #F8FAFC;
-  padding: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
+/* Period / Semester Pill (Same height & pill radius for perfect symmetry) */
 .period-pill {
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  height: 38px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-pill);
-  padding: 7px 14px;
+  padding: 0 16px;
   color: #CBD5E1;
   font-size: 12.5px;
   font-weight: 500;
   white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .period-pill svg {
-  width: 13px;
-  height: 13px;
-  color: var(--header-text-muted);
+  width: 14px;
+  height: 14px;
+  color: var(--accent);
+  flex-shrink: 0;
 }
 
 /* ==========================================================================
@@ -1030,9 +1089,11 @@ button[type="submit"]:disabled::before {
 
 @media (max-width: 768px) {
   .attenad-nav-inner {
+    display: flex;
     height: auto;
     padding: 12px 16px;
     flex-wrap: wrap;
+    justify-content: space-between;
     gap: 12px;
   }
 
@@ -1043,6 +1104,7 @@ button[type="submit"]:disabled::before {
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     padding-top: 6px;
     gap: 20px;
+    justify-content: center;
   }
 
   .tab-link {
@@ -1084,13 +1146,14 @@ button[type="submit"]:disabled::before {
     font-size: 14.5px;
   }
 
-  .filter-pill-wrap {
+  .filter-dropdown-wrap {
     width: 100%;
-    justify-content: space-between;
   }
 
-  .attenad-select {
+  .filter-dropdown-select {
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .period-pill {
