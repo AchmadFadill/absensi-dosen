@@ -287,65 +287,88 @@ function inisialisasiFilter() {
 
 // State Pagination
 let rekapCurrentPage = 1;
-const REKAP_PAGE_SIZE = 10;
+let rekapPageSize = 10;
 
 let logCurrentPage = 1;
-const LOG_PAGE_SIZE = 10;
+let logPageSize = 10;
 
 let isPrintingAllRekap = false;
 
-// Helper Generator Pagination Attenad
-function buatTombolPagination(currentPage, totalPages, functionName) {
-  if (totalPages <= 1) {
-    return `<button type="button" class="page-btn active" disabled>1</button>`;
+// Helper Render Dropdown Pagination Attenad
+function renderDropdownPagination(containerId, currentPage, totalPages, totalItems, pageSize, onPageChangeName, onPageSizeChangeName, unitName = 'data') {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (totalItems === 0) {
+    container.style.display = 'none';
+    container.innerHTML = '';
+    return;
   }
 
-  let html = '';
+  container.style.display = 'flex';
 
-  // Tombol Sebelumnya
-  const prevDisabled = currentPage <= 1 ? 'disabled' : '';
-  html += `<button type="button" class="page-btn page-prev" ${prevDisabled} onclick="${functionName}(${currentPage - 1})" aria-label="Halaman Sebelumnya">
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-      <polyline points="15 18 9 12 15 6"></polyline>
-    </svg>
-    <span>Sebelumnya</span>
-  </button>`;
+  const start = (currentPage - 1) * pageSize + 1;
+  const end = Math.min(currentPage * pageSize, totalItems);
 
-  // Hitung range nomor halaman
-  let pages = [];
-  if (totalPages <= 7) {
-    for (let i = 1; i <= totalPages; i++) pages.push(i);
-  } else {
-    pages.push(1);
-    if (currentPage > 3) pages.push('...');
-    
-    const start = Math.max(2, currentPage - 1);
-    const end = Math.min(totalPages - 1, currentPage + 1);
-    for (let i = start; i <= end; i++) pages.push(i);
-    
-    if (currentPage < totalPages - 2) pages.push('...');
-    pages.push(totalPages);
+  // Generate opsi Halaman (1, 2, 3... totalPages)
+  let pageOptionsHtml = '';
+  for (let i = 1; i <= totalPages; i++) {
+    pageOptionsHtml += `<option value="${i}" ${i === currentPage ? 'selected' : ''}>${i}</option>`;
   }
 
-  pages.forEach(p => {
-    if (p === '...') {
-      html += `<span class="page-ellipsis">…</span>`;
-    } else {
-      const activeClass = p === currentPage ? 'active' : '';
-      html += `<button type="button" class="page-btn ${activeClass}" onclick="${functionName}(${p})">${p}</button>`;
-    }
+  // Generate opsi Baris (10, 25, 50, 100) persis referensi pengguna
+  const sizes = [10, 25, 50, 100];
+  let sizeOptionsHtml = '';
+  sizes.forEach(sz => {
+    sizeOptionsHtml += `<option value="${sz}" ${sz === pageSize ? 'selected' : ''}>${sz}</option>`;
   });
 
-  // Tombol Berikutnya
+  const prevDisabled = currentPage <= 1 ? 'disabled' : '';
   const nextDisabled = currentPage >= totalPages ? 'disabled' : '';
-  html += `<button type="button" class="page-btn page-next" ${nextDisabled} onclick="${functionName}(${currentPage + 1})" aria-label="Halaman Berikutnya">
-    <span>Berikutnya</span>
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-      <polyline points="9 18 15 12 9 6"></polyline>
-    </svg>
-  </button>`;
 
-  return html;
+  container.innerHTML = `
+    <div class="pagination-info">
+      Menampilkan <strong>${start}–${end}</strong> dari <strong>${totalItems}</strong> ${unitName}
+    </div>
+    <div class="pagination-nav-group">
+      <div class="pagination-dropdown-field">
+        <span class="pagination-field-label">Halaman</span>
+        <div class="pagination-select-wrap">
+          <select class="pagination-field-select" onchange="${onPageChangeName}(Number(this.value))" aria-label="Pilih Halaman">
+            ${pageOptionsHtml}
+          </select>
+          <svg class="pagination-select-chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+      </div>
+
+      <div class="pagination-dropdown-field">
+        <span class="pagination-field-label">Baris</span>
+        <div class="pagination-select-wrap">
+          <select class="pagination-field-select" onchange="${onPageSizeChangeName}(Number(this.value))" aria-label="Pilih Jumlah Baris">
+            ${sizeOptionsHtml}
+          </select>
+          <svg class="pagination-select-chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+      </div>
+
+      <div class="pagination-nav-arrows">
+        <button type="button" class="page-nav-arrow" ${prevDisabled} onclick="${onPageChangeName}(${currentPage - 1})" title="Halaman Sebelumnya" aria-label="Halaman Sebelumnya">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <button type="button" class="page-nav-arrow" ${nextDisabled} onclick="${onPageChangeName}(${currentPage + 1})" title="Halaman Berikutnya" aria-label="Halaman Berikutnya">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+  `;
 }
 
 [filterBulan, filterDosen, filterStatus].forEach(el => {
@@ -476,12 +499,10 @@ function renderGaji() {
   // 3. Render Tabel Rekapitulasi per Dosen (dengan Pagination)
   const tbodyDosen = document.getElementById('tabelRekapDosen');
   const elPaginationRekap = document.getElementById('paginationRekap');
-  const elPaginationRekapInfo = document.getElementById('paginationRekapInfo');
-  const elPaginationRekapNav = document.getElementById('paginationRekapNav');
 
   if (tbodyDosen) {
     const totalRekap = rekapDosenTerhitung.length;
-    const rekapTotalPages = Math.ceil(totalRekap / REKAP_PAGE_SIZE) || 1;
+    const rekapTotalPages = Math.ceil(totalRekap / rekapPageSize) || 1;
 
     let pageRekap = [];
     let startIdxRekap = 0;
@@ -496,8 +517,8 @@ function renderGaji() {
       if (rekapCurrentPage > rekapTotalPages) rekapCurrentPage = rekapTotalPages;
       if (rekapCurrentPage < 1) rekapCurrentPage = 1;
 
-      startIdxRekap = (rekapCurrentPage - 1) * REKAP_PAGE_SIZE;
-      endIdxRekap = Math.min(startIdxRekap + REKAP_PAGE_SIZE, totalRekap);
+      startIdxRekap = (rekapCurrentPage - 1) * rekapPageSize;
+      endIdxRekap = Math.min(startIdxRekap + rekapPageSize, totalRekap);
       pageRekap = rekapDosenTerhitung.slice(startIdxRekap, endIdxRekap);
     }
 
@@ -561,11 +582,9 @@ function renderGaji() {
         </tr>`;
       }).join('');
 
-      if (!isPrintingAllRekap && elPaginationRekap && elPaginationRekapInfo && elPaginationRekapNav) {
-        elPaginationRekap.style.display = 'flex';
-        elPaginationRekapInfo.innerHTML = `Menampilkan <strong>${startIdxRekap + 1}–${endIdxRekap}</strong> dari <strong>${totalRekap}</strong> dosen`;
-        elPaginationRekapNav.innerHTML = buatTombolPagination(rekapCurrentPage, rekapTotalPages, 'gantiHalamanRekap');
-      } else if (isPrintingAllRekap && elPaginationRekap) {
+      if (!isPrintingAllRekap) {
+        renderDropdownPagination('paginationRekap', rekapCurrentPage, rekapTotalPages, totalRekap, rekapPageSize, 'gantiHalamanRekap', 'gantiBarisRekap', 'dosen');
+      } else if (elPaginationRekap) {
         elPaginationRekap.style.display = 'none';
       }
     }
@@ -579,19 +598,17 @@ function renderGaji() {
 
   const tbodyLog = document.getElementById('tabelLogSesi');
   const elPaginationLog = document.getElementById('paginationLog');
-  const elPaginationLogInfo = document.getElementById('paginationLogInfo');
-  const elPaginationLogNav = document.getElementById('paginationLogNav');
 
   if (tbodyLog) {
     const logUrut = [...sesiTersaring].sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
     const totalLog = logUrut.length;
-    const logTotalPages = Math.ceil(totalLog / LOG_PAGE_SIZE) || 1;
+    const logTotalPages = Math.ceil(totalLog / logPageSize) || 1;
 
     if (logCurrentPage > logTotalPages) logCurrentPage = logTotalPages;
     if (logCurrentPage < 1) logCurrentPage = 1;
 
-    const startIdxLog = (logCurrentPage - 1) * LOG_PAGE_SIZE;
-    const endIdxLog = Math.min(startIdxLog + LOG_PAGE_SIZE, totalLog);
+    const startIdxLog = (logCurrentPage - 1) * logPageSize;
+    const endIdxLog = Math.min(startIdxLog + logPageSize, totalLog);
     const pageLog = logUrut.slice(startIdxLog, endIdxLog);
 
     if (totalLog === 0) {
@@ -628,23 +645,31 @@ function renderGaji() {
         </tr>`;
       }).join('');
 
-      if (elPaginationLog && elPaginationLogInfo && elPaginationLogNav) {
-        elPaginationLog.style.display = 'flex';
-        elPaginationLogInfo.innerHTML = `Menampilkan <strong>${startIdxLog + 1}–${endIdxLog}</strong> dari <strong>${totalLog}</strong> sesi`;
-        elPaginationLogNav.innerHTML = buatTombolPagination(logCurrentPage, logTotalPages, 'gantiHalamanLog');
-      }
+      renderDropdownPagination('paginationLog', logCurrentPage, logTotalPages, totalLog, logPageSize, 'gantiHalamanLog', 'gantiBarisLog', 'sesi');
     }
   }
 }
 
 // Global scope bindings untuk pagination
 window.gantiHalamanRekap = function(page) {
-  rekapCurrentPage = page;
+  rekapCurrentPage = Number(page);
+  renderGaji();
+};
+
+window.gantiBarisRekap = function(newSize) {
+  rekapPageSize = Number(newSize) || 10;
+  rekapCurrentPage = 1;
   renderGaji();
 };
 
 window.gantiHalamanLog = function(page) {
-  logCurrentPage = page;
+  logCurrentPage = Number(page);
+  renderGaji();
+};
+
+window.gantiBarisLog = function(newSize) {
+  logPageSize = Number(newSize) || 10;
+  logCurrentPage = 1;
   renderGaji();
 };
 

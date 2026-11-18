@@ -25,7 +25,7 @@ const FALLBACK_SKS = {
 };
 let mapSks = { ...FALLBACK_SKS };
 let dashboardCurrentPage = 1;
-const DASHBOARD_PAGE_SIZE = 10;
+let dashboardPageSize = 10;
 
 function getSks(kode, nama) {
   if (kode && mapSks[kode]) return mapSks[kode];
@@ -467,22 +467,20 @@ function render() {
     });
   }
 
-  // Tabel riwayat absensi dengan pagination
+  // Tabel riwayat absensi dengan pagination dropdown
   const elTabelBody = document.getElementById('tabelBody');
   const elPagination = document.getElementById('paginationDashboard');
-  const elPaginationInfo = document.getElementById('paginationDashboardInfo');
-  const elPaginationNav = document.getElementById('paginationDashboardNav');
 
   if (elTabelBody) {
     const sortedData = [...data].sort((a, b) => parseTimestamp(b.tanggal) - parseTimestamp(a.tanggal));
     const totalData = sortedData.length;
-    const totalPages = Math.ceil(totalData / DASHBOARD_PAGE_SIZE) || 1;
+    const totalPages = Math.ceil(totalData / dashboardPageSize) || 1;
 
     if (dashboardCurrentPage > totalPages) dashboardCurrentPage = totalPages;
     if (dashboardCurrentPage < 1) dashboardCurrentPage = 1;
 
-    const startIndex = (dashboardCurrentPage - 1) * DASHBOARD_PAGE_SIZE;
-    const endIndex = Math.min(startIndex + DASHBOARD_PAGE_SIZE, totalData);
+    const startIndex = (dashboardCurrentPage - 1) * dashboardPageSize;
+    const endIndex = Math.min(startIndex + dashboardPageSize, totalData);
     const pageData = sortedData.slice(startIndex, endIndex);
 
     if (totalData === 0) {
@@ -594,11 +592,7 @@ function render() {
         </tr>`;
       }).join('');
 
-      if (elPagination && elPaginationInfo && elPaginationNav) {
-        elPagination.style.display = 'flex';
-        elPaginationInfo.innerHTML = `Menampilkan <strong>${startIndex + 1}–${endIndex}</strong> dari <strong>${totalData}</strong> data`;
-        elPaginationNav.innerHTML = buatTombolPagination(dashboardCurrentPage, totalPages, 'gantiHalamanDashboard');
-      }
+      renderDropdownPagination('paginationDashboard', dashboardCurrentPage, totalPages, totalData, dashboardPageSize, 'gantiHalamanDashboard', 'gantiBarisDashboard', 'data');
     }
   }
 }
@@ -663,58 +657,81 @@ function tampilkanBukti(url, dosen, matkul, pertemuan, tanggal) {
   modalBukti.classList.add('active');
 }
 
-// ====== HELPER GENERATOR PAGINATION ATTENAD ======
-function buatTombolPagination(currentPage, totalPages, functionName) {
-  if (totalPages <= 1) {
-    return `<button type="button" class="page-btn active" disabled>1</button>`;
+// ====== HELPER RENDER DROPDOWN PAGINATION ATTENAD ======
+function renderDropdownPagination(containerId, currentPage, totalPages, totalItems, pageSize, onPageChangeName, onPageSizeChangeName, unitName = 'data') {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (totalItems === 0) {
+    container.style.display = 'none';
+    container.innerHTML = '';
+    return;
   }
 
-  let html = '';
+  container.style.display = 'flex';
 
-  // Tombol Sebelumnya
-  const prevDisabled = currentPage <= 1 ? 'disabled' : '';
-  html += `<button type="button" class="page-btn page-prev" ${prevDisabled} onclick="${functionName}(${currentPage - 1})" aria-label="Halaman Sebelumnya">
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-      <polyline points="15 18 9 12 15 6"></polyline>
-    </svg>
-    <span>Sebelumnya</span>
-  </button>`;
+  const start = (currentPage - 1) * pageSize + 1;
+  const end = Math.min(currentPage * pageSize, totalItems);
 
-  // Hitung range nomor halaman
-  let pages = [];
-  if (totalPages <= 7) {
-    for (let i = 1; i <= totalPages; i++) pages.push(i);
-  } else {
-    pages.push(1);
-    if (currentPage > 3) pages.push('...');
-    
-    const start = Math.max(2, currentPage - 1);
-    const end = Math.min(totalPages - 1, currentPage + 1);
-    for (let i = start; i <= end; i++) pages.push(i);
-    
-    if (currentPage < totalPages - 2) pages.push('...');
-    pages.push(totalPages);
+  // Generate opsi Halaman (1, 2, 3... totalPages)
+  let pageOptionsHtml = '';
+  for (let i = 1; i <= totalPages; i++) {
+    pageOptionsHtml += `<option value="${i}" ${i === currentPage ? 'selected' : ''}>${i}</option>`;
   }
 
-  pages.forEach(p => {
-    if (p === '...') {
-      html += `<span class="page-ellipsis">…</span>`;
-    } else {
-      const activeClass = p === currentPage ? 'active' : '';
-      html += `<button type="button" class="page-btn ${activeClass}" onclick="${functionName}(${p})">${p}</button>`;
-    }
+  // Generate opsi Baris (10, 25, 50, 100) persis referensi pengguna
+  const sizes = [10, 25, 50, 100];
+  let sizeOptionsHtml = '';
+  sizes.forEach(sz => {
+    sizeOptionsHtml += `<option value="${sz}" ${sz === pageSize ? 'selected' : ''}>${sz}</option>`;
   });
 
-  // Tombol Berikutnya
+  const prevDisabled = currentPage <= 1 ? 'disabled' : '';
   const nextDisabled = currentPage >= totalPages ? 'disabled' : '';
-  html += `<button type="button" class="page-btn page-next" ${nextDisabled} onclick="${functionName}(${currentPage + 1})" aria-label="Halaman Berikutnya">
-    <span>Berikutnya</span>
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-      <polyline points="9 18 15 12 9 6"></polyline>
-    </svg>
-  </button>`;
 
-  return html;
+  container.innerHTML = `
+    <div class="pagination-info">
+      Menampilkan <strong>${start}–${end}</strong> dari <strong>${totalItems}</strong> ${unitName}
+    </div>
+    <div class="pagination-nav-group">
+      <div class="pagination-dropdown-field">
+        <span class="pagination-field-label">Halaman</span>
+        <div class="pagination-select-wrap">
+          <select class="pagination-field-select" onchange="${onPageChangeName}(Number(this.value))" aria-label="Pilih Halaman">
+            ${pageOptionsHtml}
+          </select>
+          <svg class="pagination-select-chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+      </div>
+
+      <div class="pagination-dropdown-field">
+        <span class="pagination-field-label">Baris</span>
+        <div class="pagination-select-wrap">
+          <select class="pagination-field-select" onchange="${onPageSizeChangeName}(Number(this.value))" aria-label="Pilih Jumlah Baris">
+            ${sizeOptionsHtml}
+          </select>
+          <svg class="pagination-select-chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+      </div>
+
+      <div class="pagination-nav-arrows">
+        <button type="button" class="page-nav-arrow" ${prevDisabled} onclick="${onPageChangeName}(${currentPage - 1})" title="Halaman Sebelumnya" aria-label="Halaman Sebelumnya">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <button type="button" class="page-nav-arrow" ${nextDisabled} onclick="${onPageChangeName}(${currentPage + 1})" title="Halaman Berikutnya" aria-label="Halaman Berikutnya">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+  `;
 }
 
 // ====== FUNGSI VERIFIKASI LANGSUNG DARI WEB (DENGAN SWEETALERT2) ======
@@ -838,6 +855,11 @@ window.bukaModalAdminAuth = bukaModalAdminAuth;
 window.tutupModalAdminAuth = tutupModalAdminAuth;
 window.gantiHalamanDashboard = function(page) {
   dashboardCurrentPage = page;
+  render();
+};
+window.gantiBarisDashboard = function(newSize) {
+  dashboardPageSize = Number(newSize) || 10;
+  dashboardCurrentPage = 1;
   render();
 };
 
