@@ -661,34 +661,6 @@ body {
   color: #FFFFFF;
 }
 
-/* Three-Dots Menu Button */
-.kpi-more-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.kpi-more-btn:hover {
-  background: var(--surface-subtle);
-  color: var(--text-primary);
-}
-
-.kpi-more-btn span {
-  width: 3.5px;
-  height: 3.5px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
 /* KPI Value & Label */
 .kpi-card .value {
   font-size: clamp(28px, 4vw, 36px);
@@ -723,15 +695,6 @@ body {
 
 .kpi-card-highlight .label {
   color: rgba(255, 255, 255, 0.9) !important;
-}
-
-.kpi-card-highlight .kpi-more-btn {
-  color: rgba(255, 255, 255, 0.8) !important;
-}
-
-.kpi-card-highlight .kpi-more-btn:hover {
-  background: rgba(255, 255, 255, 0.15) !important;
-  color: #FFFFFF !important;
 }
 
 /* ==========================================================================
