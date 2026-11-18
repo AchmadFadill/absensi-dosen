@@ -499,26 +499,6 @@ function render() {
         </button>`;
       }
 
-      const linkStruk = (d.linkStruk || d.struk || d.linkStrukTransport || '').trim();
-      const nominalRaw = (d.nominalTransport || d.biayaTransport || '').toString().trim();
-      let labelStruk = 'Struk';
-      if (nominalRaw && !isNaN(nominalRaw) && Number(nominalRaw) > 0) {
-        labelStruk = `Struk (Rp ${Number(nominalRaw).toLocaleString('id-ID')})`;
-      }
-
-      let strukHtml = '';
-      if (linkStruk && linkStruk !== '-') {
-        strukHtml = `<button type="button" class="link-materi-btn" style="margin-top:4px;" title="Klik untuk melihat bukti struk transportasi" onclick="tampilkanBukti('${esc(linkStruk)}', '${esc(d.dosen)}', 'Struk Transportasi • ${esc(labelStruk)} • ${esc(d.mataKuliah)}', ${d.pertemuan}, '${esc(d.tanggal)}')">
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="12" y1="18" x2="12" y2="12"></line>
-            <line x1="9" y1="15" x2="15" y2="15"></line>
-          </svg>
-          <span>${esc(labelStruk)}</span>
-        </button>`;
-      }
-
       const sksNilai = getSks(d.kodeMatkul, d.mataKuliah);
       const isVerif = (d.statusVerifikasi || '').toLowerCase().includes('terverifikasi');
       const isProses = d.statusVerifikasi === 'Memproses...';
@@ -557,10 +537,7 @@ function render() {
         <td><span class="badge ${badgeMetode}">${esc(d.metode || '-')}</span></td>
         <td>${esc(d.lokasi || '-')}</td>
         <td>${materiHtml}</td>
-        <td style="text-align:center;">
-          ${buktiHtml}
-          ${strukHtml ? `<div style="margin-top:4px;">${strukHtml}</div>` : ''}
-        </td>
+        <td style="text-align:center;">${buktiHtml}</td>
         <td>${esc(d.statusKehadiran)}</td>
         <td>${verifBtnHtml}</td>
       </tr>`;
