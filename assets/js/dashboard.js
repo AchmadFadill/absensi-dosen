@@ -24,6 +24,8 @@ const FALLBACK_SKS = {
   'RKJ-250101': 3, 'RKJ-250102': 3, 'RKJ-250103': 3, 'RKJ-250104': 4, 'RKJ-250105': 4, 'RKJ-250106': 3
 };
 let mapSks = { ...FALLBACK_SKS };
+let dashboardCurrentPage = 1;
+const DASHBOARD_PAGE_SIZE = 10;
 
 function getSks(kode, nama) {
   if (kode && mapSks[kode]) return mapSks[kode];
@@ -293,6 +295,7 @@ function isiFilters() {
       selDosen.appendChild(opt);
     });
     selDosen.addEventListener('change', () => {
+      dashboardCurrentPage = 1;
       if (wrapDosen) {
         wrapDosen.classList.toggle('has-filter', Boolean(selDosen.value));
       }
@@ -314,6 +317,7 @@ function isiFilters() {
       selSem.appendChild(opt);
     });
     selSem.addEventListener('change', () => {
+      dashboardCurrentPage = 1;
       if (wrapSem) {
         wrapSem.classList.toggle('has-filter', Boolean(selSem.value));
       }
@@ -328,6 +332,7 @@ function isiFilters() {
     selMetode.innerHTML = '<option value="">Semua Metode</option>' +
       ['Offline', 'Online', 'Hybrid'].map(m => `<option value="${m}">${m}</option>`).join('');
     selMetode.addEventListener('change', () => {
+      dashboardCurrentPage = 1;
       if (wrapMetode) {
         wrapMetode.classList.toggle('has-filter', Boolean(selMetode.value));
       }
@@ -462,86 +467,139 @@ function render() {
     });
   }
 
-  // Tabel 20 data terbaru
+  // Tabel riwayat absensi dengan pagination
   const elTabelBody = document.getElementById('tabelBody');
+  const elPagination = document.getElementById('paginationDashboard');
+  const elPaginationInfo = document.getElementById('paginationDashboardInfo');
+  const elPaginationNav = document.getElementById('paginationDashboardNav');
+
   if (elTabelBody) {
-    const terbaru = [...data].sort((a, b) => parseTimestamp(b.tanggal) - parseTimestamp(a.tanggal)).slice(0, 20);
-    elTabelBody.innerHTML = terbaru.map(d => {
-      const mLow = String(d.metode || '').toLowerCase();
-      const badgeMetode = mLow === 'offline' ? 'metode-offline' : (mLow === 'online' ? 'metode-online' : (mLow === 'hybrid' ? 'metode-hybrid' : ''));
+    const sortedData = [...data].sort((a, b) => parseTimestamp(b.tanggal) - parseTimestamp(a.tanggal));
+    const totalData = sortedData.length;
+    const totalPages = Math.ceil(totalData / DASHBOARD_PAGE_SIZE) || 1;
 
-      const link = (d.linkMateri || d.materi || '').trim();
-      let materiHtml = '-';
-      if (link) {
-        if (/^https?:\/\//i.test(link)) {
-          materiHtml = `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer" class="link-materi-btn" title="Buka tautan materi perkuliahan">
+    if (dashboardCurrentPage > totalPages) dashboardCurrentPage = totalPages;
+    if (dashboardCurrentPage < 1) dashboardCurrentPage = 1;
+
+    const startIndex = (dashboardCurrentPage - 1) * DASHBOARD_PAGE_SIZE;
+    const endIndex = Math.min(startIndex + DASHBOARD_PAGE_SIZE, totalData);
+    const pageData = sortedData.slice(startIndex, endIndex);
+
+    if (totalData === 0) {
+      elTabelBody.innerHTML = '<tr><td colspan="12" class="pesan" style="border:none;box-shadow:none;">Belum ada data absensi</td></tr>';
+      if (elPagination) elPagination.style.display = 'none';
+    } else {
+      elTabelBody.innerHTML = pageData.map(d => {
+        const mLow = String(d.metode || '').toLowerCase();
+        const badgeMetode = mLow === 'offline' ? 'metode-offline' : (mLow === 'online' ? 'metode-online' : (mLow === 'hybrid' ? 'metode-hybrid' : ''));
+
+        const link = (d.linkMateri || d.materi || '').trim();
+        let materiHtml = '-';
+        if (link) {
+          if (/^https?:\/\//i.test(link)) {
+            materiHtml = `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer" class="link-materi-btn" title="Buka tautan materi perkuliahan">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+              <span>Buka Materi</span>
+            </a>`;
+          } else {
+            materiHtml = `<span title="${esc(link)}">${esc(link)}</span>`;
+          }
+        }
+
+        const linkBukti = (d.buktiKelas || d.bukti || d.linkBukti || '').trim();
+        let buktiHtml = '-';
+        if (linkBukti && linkBukti !== '-') {
+          buktiHtml = `<button type="button" class="link-materi-btn" title="Klik untuk melihat bukti foto kelas langsung" onclick="tampilkanBukti('${esc(linkBukti)}', '${esc(d.dosen)}', '${esc(d.mataKuliah)}', ${d.pertemuan}, '${esc(d.tanggal)}')">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
             </svg>
-            <span>Buka Materi</span>
-          </a>`;
-        } else {
-          materiHtml = `<span title="${esc(link)}">${esc(link)}</span>`;
+            <span>Lihat Foto</span>
+          </button>`;
         }
-      }
 
-      const linkBukti = (d.buktiKelas || d.bukti || d.linkBukti || '').trim();
-      let buktiHtml = '-';
-      if (linkBukti && linkBukti !== '-') {
-        buktiHtml = `<button type="button" class="link-materi-btn" title="Klik untuk melihat bukti foto kelas langsung" onclick="tampilkanBukti('${esc(linkBukti)}', '${esc(d.dosen)}', '${esc(d.mataKuliah)}', ${d.pertemuan}, '${esc(d.tanggal)}')">
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <circle cx="8.5" cy="8.5" r="1.5"></circle>
-            <polyline points="21 15 16 10 5 21"></polyline>
-          </svg>
-          <span>Lihat Foto</span>
-        </button>`;
-      }
+        const sksNilai = getSks(d.kodeMatkul, d.mataKuliah);
+        const isVerif = (d.statusVerifikasi || '').toLowerCase().includes('terverifikasi');
+        const isProses = d.statusVerifikasi === 'Memproses...';
 
-      const sksNilai = getSks(d.kodeMatkul, d.mataKuliah);
-      const isVerif = (d.statusVerifikasi || '').toLowerCase().includes('terverifikasi');
-      const isProses = d.statusVerifikasi === 'Memproses...';
-
-      let verifBtnHtml = '';
-      if (!isAdminLoggedIn) {
-        // Mode Publik / Dosen: Read-only badge (Dosen TIDAK BISA klik/verifikasi sendiri)
-        if (isVerif) {
-          verifBtnHtml = `<span class="badge ok" title="Sudah diverifikasi oleh Admin">✓ Terverifikasi</span>`;
+        let verifBtnHtml = '';
+        if (!isAdminLoggedIn) {
+          // Mode Publik / Dosen: Read-only badge (Dosen TIDAK BISA klik/verifikasi sendiri)
+          if (isVerif) {
+            verifBtnHtml = `<span class="badge ok" title="Sudah diverifikasi oleh Admin">✓ Terverifikasi</span>`;
+          } else {
+            verifBtnHtml = `<span class="badge warn" title="Menunggu verifikasi oleh Admin">Menunggu Verifikasi</span>`;
+          }
         } else {
-          verifBtnHtml = `<span class="badge warn" title="Menunggu verifikasi oleh Admin">Menunggu Verifikasi</span>`;
+          // Mode Admin: Tombol interaktif untuk memverifikasi atau membatalkan status
+          if (isProses) {
+            verifBtnHtml = `<span class="badge warn">Memproses...</span>`;
+          } else if (isVerif) {
+            verifBtnHtml = `<button type="button" class="badge-verif-btn ok" title="Sudah Terverifikasi. Klik untuk membatalkan / ubah status" onclick="verifikasiKehadiran(${d.no}, '${esc(d.kodeMatkul)}', ${d.pertemuan}, 'Menunggu Verifikasi')">✓ Terverifikasi</button>`;
+          } else {
+            verifBtnHtml = `<button type="button" class="btn-verif-action" title="Klik untuk langsung memverifikasi kehadiran ini" onclick="verifikasiKehadiran(${d.no}, '${esc(d.kodeMatkul)}', ${d.pertemuan}, 'Terverifikasi')">✓ Verifikasi</button>`;
+          }
         }
-      } else {
-        // Mode Admin: Tombol interaktif untuk memverifikasi atau membatalkan status
-        if (isProses) {
-          verifBtnHtml = `<span class="badge warn">Memproses...</span>`;
-        } else if (isVerif) {
-          verifBtnHtml = `<button type="button" class="badge-verif-btn ok" title="Sudah Terverifikasi. Klik untuk membatalkan / ubah status" onclick="verifikasiKehadiran(${d.no}, '${esc(d.kodeMatkul)}', ${d.pertemuan}, 'Menunggu Verifikasi')">✓ Terverifikasi</button>`;
-        } else {
-          verifBtnHtml = `<button type="button" class="btn-verif-action" title="Klik untuk langsung memverifikasi kehadiran ini" onclick="verifikasiKehadiran(${d.no}, '${esc(d.kodeMatkul)}', ${d.pertemuan}, 'Terverifikasi')">✓ Verifikasi</button>`;
-        }
-      }
 
-      return `<tr>
-        <td>${formatTanggal(d.tanggal)}</td>
-        <td><strong>${esc(d.dosen)}</strong></td>
-        <td><span class="badge semester">Sem ${esc(d.semester || '-')}</span></td>
-        <td>
-          <div class="matkul-cell">
-            <strong>${esc(d.mataKuliah || '-')}</strong>
-            ${d.kodeMatkul && d.kodeMatkul !== '-' ? `<span class="sub-kode">${esc(d.kodeMatkul)}</span>` : ''}
-          </div>
-        </td>
-        <td style="text-align:center;"><span class="badge semester">${sksNilai} SKS</span></td>
-        <td>Pertemuan ${esc(d.pertemuan)}</td>
-        <td><span class="badge ${badgeMetode}">${esc(d.metode || '-')}</span></td>
-        <td>${esc(d.lokasi || '-')}</td>
-        <td>${materiHtml}</td>
-        <td style="text-align:center;">${buktiHtml}</td>
-        <td>${esc(d.statusKehadiran)}</td>
-        <td>${verifBtnHtml}</td>
-      </tr>`;
-    }).join('') || '<tr><td colspan="12" class="pesan" style="border:none;box-shadow:none;">Belum ada data absensi</td></tr>';
+        // Tombol Struk Transportasi Khusus Mode Admin (berbarengan dengan tombol verifikasi)
+        let verifCellHtml = verifBtnHtml;
+        if (isAdminLoggedIn) {
+          const linkStruk = (d.linkStrukTransport || d.linkStruk || d.struk || d['Link Struk Transportasi'] || '').trim();
+          const nominalRaw = (d.nominalTransport || d.biayaTransport || d['Nominal Transportasi'] || '').toString().trim();
+          let labelStruk = 'Struk Transport';
+          if (nominalRaw && !isNaN(nominalRaw) && Number(nominalRaw) > 0) {
+            labelStruk = `Struk (Rp ${Number(nominalRaw).toLocaleString('id-ID')})`;
+          }
+
+          if (linkStruk && linkStruk !== '-') {
+            const strukBtnHtml = `<button type="button" class="btn-struk-admin" title="Klik untuk memeriksa bukti struk transportasi dosen" onclick="tampilkanBukti('${esc(linkStruk)}', '${esc(d.dosen)}', 'Struk Transportasi • ${esc(labelStruk)} • ${esc(d.mataKuliah)}', ${d.pertemuan}, '${esc(d.tanggal)}')">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="12" y1="18" x2="12" y2="12"></line>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+              </svg>
+              <span>${esc(labelStruk)}</span>
+            </button>`;
+
+            verifCellHtml = `<div class="verif-cell-admin">
+              ${verifBtnHtml}
+              ${strukBtnHtml}
+            </div>`;
+          }
+        }
+
+        return `<tr>
+          <td>${formatTanggal(d.tanggal)}</td>
+          <td><strong>${esc(d.dosen)}</strong></td>
+          <td><span class="badge semester">Sem ${esc(d.semester || '-')}</span></td>
+          <td>
+            <div class="matkul-cell">
+              <strong>${esc(d.mataKuliah || '-')}</strong>
+              ${d.kodeMatkul && d.kodeMatkul !== '-' ? `<span class="sub-kode">${esc(d.kodeMatkul)}</span>` : ''}
+            </div>
+          </td>
+          <td style="text-align:center;"><span class="badge semester">${sksNilai} SKS</span></td>
+          <td>Pertemuan ${esc(d.pertemuan)}</td>
+          <td><span class="badge ${badgeMetode}">${esc(d.metode || '-')}</span></td>
+          <td>${esc(d.lokasi || '-')}</td>
+          <td>${materiHtml}</td>
+          <td style="text-align:center;">${buktiHtml}</td>
+          <td>${esc(d.statusKehadiran)}</td>
+          <td>${verifCellHtml}</td>
+        </tr>`;
+      }).join('');
+
+      if (elPagination && elPaginationInfo && elPaginationNav) {
+        elPagination.style.display = 'flex';
+        elPaginationInfo.innerHTML = `Menampilkan <strong>${startIndex + 1}–${endIndex}</strong> dari <strong>${totalData}</strong> data`;
+        elPaginationNav.innerHTML = buatTombolPagination(dashboardCurrentPage, totalPages, 'gantiHalamanDashboard');
+      }
+    }
   }
 }
 
@@ -605,15 +663,107 @@ function tampilkanBukti(url, dosen, matkul, pertemuan, tanggal) {
   modalBukti.classList.add('active');
 }
 
-// ====== FUNGSI VERIFIKASI LANGSUNG DARI WEB ======
+// ====== HELPER GENERATOR PAGINATION ATTENAD ======
+function buatTombolPagination(currentPage, totalPages, functionName) {
+  if (totalPages <= 1) {
+    return `<button type="button" class="page-btn active" disabled>1</button>`;
+  }
+
+  let html = '';
+
+  // Tombol Sebelumnya
+  const prevDisabled = currentPage <= 1 ? 'disabled' : '';
+  html += `<button type="button" class="page-btn page-prev" ${prevDisabled} onclick="${functionName}(${currentPage - 1})" aria-label="Halaman Sebelumnya">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="15 18 9 12 15 6"></polyline>
+    </svg>
+    <span>Sebelumnya</span>
+  </button>`;
+
+  // Hitung range nomor halaman
+  let pages = [];
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    if (currentPage > 3) pages.push('...');
+    
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    
+    if (currentPage < totalPages - 2) pages.push('...');
+    pages.push(totalPages);
+  }
+
+  pages.forEach(p => {
+    if (p === '...') {
+      html += `<span class="page-ellipsis">…</span>`;
+    } else {
+      const activeClass = p === currentPage ? 'active' : '';
+      html += `<button type="button" class="page-btn ${activeClass}" onclick="${functionName}(${p})">${p}</button>`;
+    }
+  });
+
+  // Tombol Berikutnya
+  const nextDisabled = currentPage >= totalPages ? 'disabled' : '';
+  html += `<button type="button" class="page-btn page-next" ${nextDisabled} onclick="${functionName}(${currentPage + 1})" aria-label="Halaman Berikutnya">
+    <span>Berikutnya</span>
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </button>`;
+
+  return html;
+}
+
+// ====== FUNGSI VERIFIKASI LANGSUNG DARI WEB (DENGAN SWEETALERT2) ======
 async function verifikasiKehadiran(no, kodeMatkul, pertemuan, statusBaru) {
   if (!isAdminLoggedIn || !savedAdminPin) {
-    alert('Akses ditolak: Silakan Masuk sebagai Admin terlebih dahulu.');
-    bukaModalAdminAuth();
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Akses Ditolak',
+        text: 'Silakan Masuk sebagai Admin terlebih dahulu untuk memverifikasi absensi.',
+        confirmButtonColor: '#0a62e8',
+        confirmButtonText: 'Masuk Admin'
+      }).then((res) => {
+        if (res.isConfirmed) bukaModalAdminAuth();
+      });
+    } else {
+      alert('Akses ditolak: Silakan Masuk sebagai Admin terlebih dahulu.');
+      bukaModalAdminAuth();
+    }
     return;
   }
 
-  const konfirm = confirm(`Apakah Anda yakin ingin mengubah status verifikasi ini menjadi "${statusBaru}"?`);
+  const isBatal = statusBaru !== 'Terverifikasi';
+  const actionTitle = isBatal ? 'Batalkan Verifikasi?' : 'Konfirmasi Verifikasi';
+  const actionHtml = isBatal
+    ? `Apakah Anda yakin ingin membatalkan status verifikasi pertemuan ke-<b>${pertemuan}</b> (${kodeMatkul}) kembali menjadi <span style="color:#f59e0b;font-weight:700;">"${statusBaru}"</span>?`
+    : `Apakah Anda yakin ingin memverifikasi kehadiran perkuliahan ke-<b>${pertemuan}</b> (${kodeMatkul}) menjadi <span style="color:#0a62e8;font-weight:700;">"${statusBaru}"</span>?`;
+  const confirmBtnText = isBatal ? 'Ya, Batalkan Verifikasi' : 'Ya, Verifikasi Kehadiran';
+  const confirmBtnColor = isBatal ? '#e11d48' : '#0a62e8';
+
+  let konfirm = false;
+  if (typeof Swal !== 'undefined') {
+    const swalRes = await Swal.fire({
+      title: actionTitle,
+      html: actionHtml,
+      icon: isBatal ? 'warning' : 'question',
+      showCancelButton: true,
+      confirmButtonColor: confirmBtnColor,
+      cancelButtonColor: '#64748b',
+      confirmButtonText: confirmBtnText,
+      cancelButtonText: 'Batal',
+      reverseButtons: true,
+      focusCancel: true
+    });
+    konfirm = swalRes.isConfirmed;
+  } else {
+    konfirm = confirm(`Apakah Anda yakin ingin mengubah status verifikasi ini menjadi "${statusBaru}"?`);
+  }
+
   if (!konfirm) return;
 
   // Cari item di state lokal
@@ -650,8 +800,29 @@ async function verifikasiKehadiran(no, kodeMatkul, pertemuan, statusBaru) {
       item.statusVerifikasi = statusBaru;
     }
     render();
+
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil Diperbarui',
+        html: `Status kehadiran berhasil diubah menjadi <b>"${statusBaru}"</b>.`,
+        timer: 1800,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end'
+      });
+    }
   } catch(err) {
-    alert('Gagal memproses verifikasi. Silakan coba lagi.');
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal Memproses',
+        text: err.message || 'Gagal memproses verifikasi. Silakan coba lagi.',
+        confirmButtonColor: '#0a62e8'
+      });
+    } else {
+      alert('Gagal memproses verifikasi. Silakan coba lagi.');
+    }
     if (item) {
       item.statusVerifikasi = statusLama;
       render();
@@ -665,6 +836,10 @@ window.verifikasiKehadiran = verifikasiKehadiran;
 window.tutupModalBukti = tutupModalBukti;
 window.bukaModalAdminAuth = bukaModalAdminAuth;
 window.tutupModalAdminAuth = tutupModalAdminAuth;
+window.gantiHalamanDashboard = function(page) {
+  dashboardCurrentPage = page;
+  render();
+};
 
 async function muatData() {
   checkAdminSession();

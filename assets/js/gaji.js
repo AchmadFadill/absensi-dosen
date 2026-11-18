@@ -285,8 +285,75 @@ function inisialisasiFilter() {
   }
 }
 
+// State Pagination
+let rekapCurrentPage = 1;
+const REKAP_PAGE_SIZE = 10;
+
+let logCurrentPage = 1;
+const LOG_PAGE_SIZE = 10;
+
+let isPrintingAllRekap = false;
+
+// Helper Generator Pagination Attenad
+function buatTombolPagination(currentPage, totalPages, functionName) {
+  if (totalPages <= 1) {
+    return `<button type="button" class="page-btn active" disabled>1</button>`;
+  }
+
+  let html = '';
+
+  // Tombol Sebelumnya
+  const prevDisabled = currentPage <= 1 ? 'disabled' : '';
+  html += `<button type="button" class="page-btn page-prev" ${prevDisabled} onclick="${functionName}(${currentPage - 1})" aria-label="Halaman Sebelumnya">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="15 18 9 12 15 6"></polyline>
+    </svg>
+    <span>Sebelumnya</span>
+  </button>`;
+
+  // Hitung range nomor halaman
+  let pages = [];
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    if (currentPage > 3) pages.push('...');
+    
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    
+    if (currentPage < totalPages - 2) pages.push('...');
+    pages.push(totalPages);
+  }
+
+  pages.forEach(p => {
+    if (p === '...') {
+      html += `<span class="page-ellipsis">…</span>`;
+    } else {
+      const activeClass = p === currentPage ? 'active' : '';
+      html += `<button type="button" class="page-btn ${activeClass}" onclick="${functionName}(${p})">${p}</button>`;
+    }
+  });
+
+  // Tombol Berikutnya
+  const nextDisabled = currentPage >= totalPages ? 'disabled' : '';
+  html += `<button type="button" class="page-btn page-next" ${nextDisabled} onclick="${functionName}(${currentPage + 1})" aria-label="Halaman Berikutnya">
+    <span>Berikutnya</span>
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </button>`;
+
+  return html;
+}
+
 [filterBulan, filterDosen, filterStatus].forEach(el => {
-  if (el) el.addEventListener('change', renderGaji);
+  if (el) el.addEventListener('change', () => {
+    rekapCurrentPage = 1;
+    logCurrentPage = 1;
+    renderGaji();
+  });
 });
 
 // ====== KALKULASI & RENDER GAJI ======
@@ -304,7 +371,7 @@ function renderGaji() {
   if (wrapDosen) wrapDosen.classList.toggle('has-filter', Boolean(pDosen));
   if (wrapStatus) wrapStatus.classList.toggle('has-filter', pStatus !== 'Hadir');
 
-  // Filter Sesi Kehadiran
+  // Filter Sesi Kehadiran berdasarkan Periode, Dosen, dan Status Kehadiran
   const sesiTersaring = rawAbsensi.filter(d => {
     const cocokBulan = !pBulan || formatBulanTahun(d.tanggal) === pBulan;
     const cocokDosen = !pDosen || (d.dosen || '').trim() === pDosen;
@@ -312,10 +379,16 @@ function renderGaji() {
     return cocokBulan && cocokDosen && cocokStatus;
   });
 
-  // 1. Grouping per Dosen
+  // ATURAN SISTEM: HANYA absensi yang telah TERVERIFIKASI oleh Admin yang dihitung honor & gajinya
+  const sesiTerverifikasi = sesiTersaring.filter(d => {
+    const statusV = (d.statusVerifikasi || '').toLowerCase();
+    return statusV.includes('terverifikasi');
+  });
+
+  // 1. Grouping per Dosen (HANYA DARI SESI TERVERIFIKASI)
   const perDosen = {};
 
-  sesiTersaring.forEach(sesi => {
+  sesiTerverifikasi.forEach(sesi => {
     const dosen = (sesi.dosen || 'Tanpa Nama').trim();
     const kode = sesi.kodeMatkul || '-';
     const namaMk = sesi.mataKuliah || '-';
@@ -378,11 +451,12 @@ function renderGaji() {
   });
 
   rekapDosenTerhitung = Object.values(perDosen);
+  rekapDosenTerhitung.sort((a, b) => a.dosen.localeCompare(b.dosen));
 
-  // 2. Hitung KPI Keseluruhan
+  // 2. Hitung KPI Keseluruhan (Berdasarkan Sesi Terverifikasi)
   const totalSemuaHonor = rekapDosenTerhitung.reduce((acc, d) => acc + d.totalHonor, 0);
   const totalSemuaSks = rekapDosenTerhitung.reduce((acc, d) => acc + d.totalSksAkumulasi, 0);
-  const totalSemuaSesi = sesiTersaring.length;
+  const totalSemuaSesi = sesiTerverifikasi.length;
 
   const elTotalGaji = document.getElementById('kpiTotalGaji');
   const elTotalSks = document.getElementById('kpiTotalSks');
@@ -399,13 +473,39 @@ function renderGaji() {
   if (elTfootTotalSks) elTfootTotalSks.textContent = totalSemuaSks + ' SKS';
   if (elTfootTotalHonor) elTfootTotalHonor.textContent = rupiah(totalSemuaHonor);
 
-  // 3. Render Tabel Rekapitulasi per Dosen
+  // 3. Render Tabel Rekapitulasi per Dosen (dengan Pagination)
   const tbodyDosen = document.getElementById('tabelRekapDosen');
+  const elPaginationRekap = document.getElementById('paginationRekap');
+  const elPaginationRekapInfo = document.getElementById('paginationRekapInfo');
+  const elPaginationRekapNav = document.getElementById('paginationRekapNav');
+
   if (tbodyDosen) {
-    if (rekapDosenTerhitung.length === 0) {
-      tbodyDosen.innerHTML = '<tr><td colspan="9" class="pesan" style="border:none;">Tidak ada catatan kehadiran pada filter periode ini.</td></tr>';
+    const totalRekap = rekapDosenTerhitung.length;
+    const rekapTotalPages = Math.ceil(totalRekap / REKAP_PAGE_SIZE) || 1;
+
+    let pageRekap = [];
+    let startIdxRekap = 0;
+    let endIdxRekap = 0;
+
+    if (isPrintingAllRekap) {
+      // Saat mencetak dokumen rekapitulasi, tampilkan SELURUH data dosen tanpa terpotong pagination
+      pageRekap = rekapDosenTerhitung;
+      startIdxRekap = 0;
+      endIdxRekap = totalRekap;
     } else {
-      tbodyDosen.innerHTML = rekapDosenTerhitung.map((d, idx) => {
+      if (rekapCurrentPage > rekapTotalPages) rekapCurrentPage = rekapTotalPages;
+      if (rekapCurrentPage < 1) rekapCurrentPage = 1;
+
+      startIdxRekap = (rekapCurrentPage - 1) * REKAP_PAGE_SIZE;
+      endIdxRekap = Math.min(startIdxRekap + REKAP_PAGE_SIZE, totalRekap);
+      pageRekap = rekapDosenTerhitung.slice(startIdxRekap, endIdxRekap);
+    }
+
+    if (totalRekap === 0) {
+      tbodyDosen.innerHTML = '<tr><td colspan="9" class="pesan" style="border:none;">Tidak ada catatan kehadiran yang terverifikasi pada filter periode ini.</td></tr>';
+      if (elPaginationRekap) elPaginationRekap.style.display = 'none';
+    } else {
+      tbodyDosen.innerHTML = pageRekap.map((d, idx) => {
         const matkulBadges = Object.values(d.matkulMap).map(m => {
           return `<div style="margin-bottom:3px;font-size:12px;">
             <strong>${esc(m.nama)}</strong> 
@@ -430,7 +530,7 @@ function renderGaji() {
           : '<span style="color:var(--text-muted);">-</span>';
 
         return `<tr>
-          <td style="color:var(--text-muted);">${idx + 1}</td>
+          <td style="color:var(--text-muted);text-align:center;">${startIdxRekap + idx + 1}</td>
           <td><strong>${esc(d.dosen)}</strong></td>
           <td style="text-align:center;">${semesterBadgeHtml}</td>
           <td>${matkulBadges}</td>
@@ -460,23 +560,57 @@ function renderGaji() {
           </td>
         </tr>`;
       }).join('');
+
+      if (!isPrintingAllRekap && elPaginationRekap && elPaginationRekapInfo && elPaginationRekapNav) {
+        elPaginationRekap.style.display = 'flex';
+        elPaginationRekapInfo.innerHTML = `Menampilkan <strong>${startIdxRekap + 1}–${endIdxRekap}</strong> dari <strong>${totalRekap}</strong> dosen`;
+        elPaginationRekapNav.innerHTML = buatTombolPagination(rekapCurrentPage, rekapTotalPages, 'gantiHalamanRekap');
+      } else if (isPrintingAllRekap && elPaginationRekap) {
+        elPaginationRekap.style.display = 'none';
+      }
     }
   }
 
-  // 4. Render Log Sesi Perkuliahan
+  // 4. Render Log Sesi Perkuliahan (dengan Pagination)
   const elBadgeJumlahLog = document.getElementById('badgeJumlahLog');
-  if (elBadgeJumlahLog) elBadgeJumlahLog.textContent = sesiTersaring.length + ' Sesi';
+  if (elBadgeJumlahLog) {
+    elBadgeJumlahLog.textContent = `${sesiTersaring.length} Sesi (${sesiTerverifikasi.length} Terverifikasi)`;
+  }
 
   const tbodyLog = document.getElementById('tabelLogSesi');
+  const elPaginationLog = document.getElementById('paginationLog');
+  const elPaginationLogInfo = document.getElementById('paginationLogInfo');
+  const elPaginationLogNav = document.getElementById('paginationLogNav');
+
   if (tbodyLog) {
     const logUrut = [...sesiTersaring].sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+    const totalLog = logUrut.length;
+    const logTotalPages = Math.ceil(totalLog / LOG_PAGE_SIZE) || 1;
 
-    if (logUrut.length === 0) {
+    if (logCurrentPage > logTotalPages) logCurrentPage = logTotalPages;
+    if (logCurrentPage < 1) logCurrentPage = 1;
+
+    const startIdxLog = (logCurrentPage - 1) * LOG_PAGE_SIZE;
+    const endIdxLog = Math.min(startIdxLog + LOG_PAGE_SIZE, totalLog);
+    const pageLog = logUrut.slice(startIdxLog, endIdxLog);
+
+    if (totalLog === 0) {
       tbodyLog.innerHTML = '<tr><td colspan="8" class="pesan" style="border:none;">Tidak ada riwayat pertemuan.</td></tr>';
+      if (elPaginationLog) elPaginationLog.style.display = 'none';
     } else {
-      tbodyLog.innerHTML = logUrut.slice(0, 30).map(s => {
+      tbodyLog.innerHTML = pageLog.map(s => {
         const sks = getSks(s.kodeMatkul, s.mataKuliah);
         const honorSesi = sks * TARIF_PER_SKS;
+        const isVerif = (s.statusVerifikasi || '').toLowerCase().includes('terverifikasi');
+
+        const statusBadgeHtml = isVerif
+          ? `<span class="badge ok" title="Sudah diverifikasi oleh Admin">✓ Terverifikasi</span>`
+          : `<span class="badge warn" title="Menunggu verifikasi Admin">Menunggu Verifikasi</span>`;
+
+        const honorTextHtml = isVerif
+          ? `<span style="font-weight:700;color:var(--text-primary);">${rupiah(honorSesi)}</span>`
+          : `<span style="color:var(--text-muted);font-size:11.5px;font-style:italic;" title="Belum diverifikasi sehingga belum masuk perhitungan honor">Rp 0 (Pending)</span>`;
+
         return `<tr>
           <td>${formatTanggalSingkat(s.tanggal)}</td>
           <td><strong>${esc(s.dosen)}</strong></td>
@@ -489,13 +623,30 @@ function renderGaji() {
           </td>
           <td>Pertemuan ${esc(s.pertemuan || '-')}</td>
           <td>${esc(s.metode || '-')}</td>
-          <td><span class="badge ok">${esc(s.statusKehadiran || 'Hadir')}</span></td>
-          <td style="text-align:right;font-weight:700;color:var(--text-primary);">${rupiah(honorSesi)}</td>
+          <td>${statusBadgeHtml}</td>
+          <td style="text-align:right;">${honorTextHtml}</td>
         </tr>`;
       }).join('');
+
+      if (elPaginationLog && elPaginationLogInfo && elPaginationLogNav) {
+        elPaginationLog.style.display = 'flex';
+        elPaginationLogInfo.innerHTML = `Menampilkan <strong>${startIdxLog + 1}–${endIdxLog}</strong> dari <strong>${totalLog}</strong> sesi`;
+        elPaginationLogNav.innerHTML = buatTombolPagination(logCurrentPage, logTotalPages, 'gantiHalamanLog');
+      }
     }
   }
 }
+
+// Global scope bindings untuk pagination
+window.gantiHalamanRekap = function(page) {
+  rekapCurrentPage = page;
+  renderGaji();
+};
+
+window.gantiHalamanLog = function(page) {
+  logCurrentPage = page;
+  renderGaji();
+};
 
 // ====== MODAL SLIP GAJI & CETAK ======
 const slipModal = document.getElementById('slipModal');
@@ -555,15 +706,21 @@ if (btnCetakRekap) {
     setPrintPageStyle('@page { size: A4 landscape; margin: 10mm 12mm 12mm 12mm; }');
     document.body.classList.add('is-printing-rekap');
     document.body.classList.remove('is-printing-slip');
+    isPrintingAllRekap = true;
+    renderGaji();
     setTimeout(() => {
       window.print();
-    }, 50);
+    }, 80);
   });
 }
 
 window.addEventListener('afterprint', () => {
   document.body.classList.remove('is-printing-slip');
   document.body.classList.remove('is-printing-rekap');
+  if (isPrintingAllRekap) {
+    isPrintingAllRekap = false;
+    renderGaji();
+  }
 });
 
 window.bukaModalSlip = function(namaDosen) {

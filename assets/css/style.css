@@ -1472,6 +1472,43 @@ button[type="submit"]:disabled::before {
   border-color: var(--accent);
 }
 
+/* Container Verifikasi & Struk Khusus Admin */
+.verif-cell-admin {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: flex-start;
+}
+
+.btn-struk-admin {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(2, 132, 199, 0.1);
+  color: #0284c7;
+  border: 1px solid rgba(2, 132, 199, 0.28);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+}
+
+[data-theme="dark"] .btn-struk-admin {
+  background: rgba(56, 189, 248, 0.14);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.32);
+}
+
+.btn-struk-admin:hover {
+  background: rgba(2, 132, 199, 0.2);
+  border-color: #0284c7;
+  transform: translateY(-1px);
+}
+
 @media (max-width: 768px) {
   .attenad-nav-inner {
     display: flex;
@@ -1644,8 +1681,15 @@ button[type="submit"]:disabled::before {
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
+  overflow-x: hidden;
   box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.35);
   position: relative;
+}
+
+.slip-modal-card.slip-modal-lg,
+#slipModal .slip-modal-card {
+  max-width: 880px;
+  width: min(880px, 96vw);
 }
 
 .slip-header-bar {
@@ -2061,10 +2105,17 @@ button[type="submit"]:disabled::before {
   flex: 1;
 }
 
+.slip-table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 18px;
+}
+
 .slip-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 18px;
+  margin-bottom: 0;
 }
 
 .slip-table th,
@@ -2214,6 +2265,142 @@ button[type="submit"]:disabled::before {
 }
 
 /* ==========================================================================
+   12. ATTENAD PAGINATION COMPONENT
+   ========================================================================== */
+.attenad-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 10px 4px 2px 4px;
+  font-size: 13px;
+}
+
+.pagination-info {
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.pagination-info strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.page-btn {
+  height: 34px;
+  min-width: 34px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-subtle);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  color: var(--accent);
+}
+
+.page-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #FFFFFF !important;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(10, 98, 232, 0.3);
+}
+
+.page-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.page-ellipsis {
+  padding: 0 4px;
+  color: var(--text-muted);
+  font-weight: 700;
+  user-select: none;
+}
+
+@media (max-width: 640px) {
+  .attenad-pagination {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    text-align: center;
+  }
+  .pagination-nav {
+    justify-content: center;
+  }
+  .page-btn {
+    height: 32px;
+    min-width: 32px;
+    font-size: 12px;
+    padding: 0 8px;
+  }
+}
+
+/* ==========================================================================
+   13. SWEETALERT2 THEME INTEGRATION
+   ========================================================================== */
+.swal2-container {
+  z-index: 99999 !important;
+}
+
+.swal2-popup {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.45) !important;
+  padding: 24px !important;
+}
+
+[data-theme="dark"] .swal2-popup {
+  background: var(--surface) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+}
+
+[data-theme="dark"] .swal2-title {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .swal2-html-container {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .swal2-toast {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] .swal2-toast .swal2-title {
+  color: var(--text-primary) !important;
+}
+
+/* ==========================================================================
    DOKUMEN CETAK REKAP RESMI (ELEMEN CETAK KHUSUS)
    ========================================================================== */
 .print-rekap-kop,
@@ -2267,6 +2454,7 @@ button[type="submit"]:disabled::before {
   .slip-header-bar,
   .slip-close-btn,
   .slip-actions,
+  .attenad-pagination,
   #modalAdminAuth,
   #modalBukti {
     display: none !important;
@@ -2387,10 +2575,16 @@ button[type="submit"]:disabled::before {
   }
 
   /* Tabel Slip */
+  .slip-table-responsive {
+    width: 100% !important;
+    overflow: visible !important;
+    margin-bottom: 14px !important;
+  }
+
   .slip-table {
     width: 100% !important;
     border-collapse: collapse !important;
-    margin-bottom: 14px !important;
+    margin-bottom: 0 !important;
     font-size: 11.5px !important;
   }
 

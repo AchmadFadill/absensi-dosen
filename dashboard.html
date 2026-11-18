@@ -16,8 +16,11 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <!-- External Stylesheet (Unified Attenad Design System) -->
-  <link rel="stylesheet" href="assets/css/style.css?v=2.9">
+  <link rel="stylesheet" href="assets/css/style.css?v=2.12">
 </head>
 <body>
 
@@ -280,6 +283,12 @@
             </thead>
             <tbody id="tabelBody"></tbody>
           </table>
+        </div>
+
+        <!-- Attenad Pagination Bar -->
+        <div class="attenad-pagination" id="paginationDashboard" style="display:none;">
+          <div class="pagination-info" id="paginationDashboardInfo"></div>
+          <div class="pagination-nav" id="paginationDashboardNav"></div>
         </div>
       </section>
     </div>
