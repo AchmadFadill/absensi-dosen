@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=2.3">
+  <link rel="stylesheet" href="assets/css/style.css?v=2.6">
 </head>
 <body>
 
@@ -101,12 +101,12 @@
         </svg>
       </div>
       <h1>Portal Rekap Pertemuan</h1>
-      <p>Halaman ini terproteksi. Masukkan kata sandi akses dari Spreadsheet (Kolom J pada sheet Matkul) untuk melihat rekapitulasi pertemuan dosen.</p>
+      <p>Masukkan PIN untuk melanjutkan.</p>
 
       <form id="formAuth">
         <div class="lock-input-group">
-          <input type="password" id="inputPass" placeholder="Masukkan kata sandi..." autocomplete="current-password" required autofocus>
-          <button type="button" id="togglePass" class="toggle-pass-btn" aria-label="Tampilkan kata sandi">
+          <input type="password" id="inputPass" placeholder="Masukkan PIN" autocomplete="current-password" required autofocus>
+          <button type="button" id="togglePass" class="toggle-pass-btn" aria-label="Tampilkan atau sembunyikan PIN">
             <svg id="eyeIcon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>
@@ -117,7 +117,7 @@
         <div id="lockAlert" class="lock-alert"></div>
 
         <button type="submit" id="btnUnlock" style="width:100%;">
-          <span>Buka Rekap Pertemuan</span>
+          <span>Masuk</span>
         </button>
       </form>
     </div>
@@ -254,7 +254,20 @@
         </section>
 
         <!-- Panel 1: Ringkasan Honor per Dosen -->
-        <section class="panel">
+        <section class="panel" id="panelRekapHonor">
+          <!-- KOP Cetak Dokumen Rekap Resmi (Hanya tampil saat dicetak) -->
+          <div class="print-rekap-kop">
+            <div class="print-rekap-title-box">
+              <h2>POLITEKNIK IDN BOGOR</h2>
+              <p>Jl. Raya Citra Indah, Sukamaju, Jonggol, Bogor, Jawa Barat</p>
+              <div class="print-rekap-doc-title">REKAPITULASI HONOR PERKULIAHAN DOSEN</div>
+            </div>
+            <div class="print-rekap-meta">
+              <span>Periode: <strong id="printRekapPeriode">Semua Periode</strong></span>
+              <span>Tanggal Cetak: <strong id="printRekapTglCetak">-</strong></span>
+            </div>
+          </div>
+
           <div class="panel-header">
             <div>
               <h2>Rekapitulasi Honor per Dosen</h2>
@@ -273,26 +286,48 @@
           </div>
 
           <div class="table-wrap">
-            <table>
+            <table class="table-rekap-honor">
               <thead>
                 <tr>
-                  <th style="width:40px;">No</th>
-                  <th>Dosen Pengampu</th>
+                  <th style="width:35px;text-align:center;">No</th>
+                  <th style="width:160px;">Dosen Pengampu</th>
                   <th>Mata Kuliah & Bobot SKS</th>
-                  <th style="text-align:center;">Total Sesi Hadir</th>
-                  <th style="text-align:center;">Akumulasi SKS</th>
-                  <th>Formula Perhitungan</th>
-                  <th style="text-align:right;">Total Honor (Rp)</th>
-                  <th style="text-align:center;">Aksi</th>
+                  <th style="width:75px;text-align:center;">Total Sesi</th>
+                  <th style="width:80px;text-align:center;">Akum. SKS</th>
+                  <th style="width:170px;">Formula Perhitungan</th>
+                  <th style="width:125px;text-align:right;">Total Honor (Rp)</th>
+                  <th style="width:80px;text-align:center;" class="col-aksi">Aksi</th>
                 </tr>
               </thead>
               <tbody id="tabelRekapDosen"></tbody>
+              <tfoot id="tfootRekapDosen" class="print-tfoot-total">
+                <tr>
+                  <td colspan="3" style="text-align:right;font-weight:700;">TOTAL KESELURUHAN:</td>
+                  <td style="text-align:center;font-weight:700;" id="tfootTotalSesi">0 Sesi</td>
+                  <td style="text-align:center;font-weight:700;" id="tfootTotalSks">0 SKS</td>
+                  <td></td>
+                  <td style="text-align:right;font-weight:800;color:var(--accent);" id="tfootTotalHonor">Rp 0</td>
+                  <td class="col-aksi"></td>
+                </tr>
+              </tfoot>
             </table>
+          </div>
+
+          <!-- Tanda Tangan Resmi Rekapitulasi (Hanya tampil saat dicetak) -->
+          <div class="print-rekap-sign-grid">
+            <div class="print-sign-box">
+              <span>Mengetahui,<br>Wakil Direktur Bidang Akademik</span>
+              <div class="print-sign-line">( Wadir Akademik )</div>
+            </div>
+            <div class="print-sign-box">
+              <span>Bogor, <span id="printRekapTglSign">-</span><br>Bagian Keuangan</span>
+              <div class="print-sign-line">( Bagian Keuangan )</div>
+            </div>
           </div>
         </section>
 
         <!-- Panel 2: Log Rincian Setiap Pertemuan -->
-        <section class="panel">
+        <section class="panel" id="panelLogSesi">
           <div class="panel-header">
             <h2>Log Sesi Perkuliahan & Honor</h2>
             <span id="badgeJumlahLog" class="badge ok" style="font-size:12px;">0 Sesi</span>
@@ -387,10 +422,31 @@
               </tr>
             </thead>
             <tbody id="slipTabelBody"></tbody>
+            <tfoot>
+              <tr style="background:#F8FAFC;font-weight:700;">
+                <td colspan="6" class="text-right">Subtotal Honor Perkuliahan:</td>
+                <td class="text-right" id="slipSubtotalMatkul">Rp 0</td>
+              </tr>
+              <tr style="background:#F8FAFC;">
+                <td colspan="6" class="text-right" style="color:#0284c7;font-weight:600;">Biaya Transportasi (Reimburse Struk):</td>
+                <td class="text-right" id="slipTransportTfoot" style="color:#0284c7;font-weight:700;">Rp 0</td>
+              </tr>
+            </tfoot>
           </table>
 
+          <div class="slip-breakdown-box">
+            <div class="slip-breakdown-row">
+              <span>Honor Perkuliahan (SKS)</span>
+              <strong id="slipHonorSks">Rp 0</strong>
+            </div>
+            <div class="slip-breakdown-row">
+              <span>Biaya Transportasi (Sesuai Struk)</span>
+              <strong id="slipTransport" style="color:#0284c7;">Rp 0</strong>
+            </div>
+          </div>
+
           <div class="slip-total-box">
-            <span class="total-label">TOTAL HONOR DITERIMA:</span>
+            <span class="total-label">TOTAL DITERIMA (HONOR + TRANSPORT):</span>
             <span class="total-amount" id="slipTotalAmount">Rp 0</span>
           </div>
 

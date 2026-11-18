@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <!-- External Stylesheet (Unified Attenad Design System) -->
-  <link rel="stylesheet" href="assets/css/style.css?v=2.3">
+  <link rel="stylesheet" href="assets/css/style.css?v=2.6">
 </head>
 <body>
 
@@ -62,8 +62,28 @@
           </a>
         </nav>
 
-        <!-- Right Utilities (Theme Toggle & Academic Badge) -->
+        <!-- Right Utilities (Admin Login & Theme Toggle) -->
         <div class="attenad-actions">
+          <!-- Button Masuk sebagai Admin -->
+          <button type="button" id="btnAdminLogin" class="btn-secondary" style="height:34px;padding:0 12px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;" title="Masuk sebagai Admin untuk verifikasi kehadiran">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span>Login Admin</span>
+          </button>
+
+          <!-- Status Admin Aktif & Tombol Keluar -->
+          <div id="adminBadgeWrap" style="display:none;align-items:center;gap:8px;">
+            <button type="button" id="btnAdminLogout" class="btn-logout" style="padding:0 10px;height:34px;font-size:12px;" title="Keluar dari mode Admin">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <span>Keluar Admin</span>
+            </button>
+          </div>
+
           <!-- Dark / Light Mode Toggle Button (Icon Only) -->
           <button type="button" id="themeToggle" class="theme-toggle" aria-label="Ganti mode tampilan" title="Beralih ke Mode Gelap">
             <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -322,6 +342,49 @@
             <span>Buka di Google Drive</span>
           </a>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Login Admin untuk Akses Verifikasi Kehadiran -->
+  <div id="modalAdminAuth" class="slip-modal-backdrop">
+    <div class="slip-modal-card" style="max-width: 420px;">
+      <div class="slip-header-bar">
+        <h3>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          Masuk sebagai Admin
+        </h3>
+        <button type="button" id="btnCloseAdminModal" class="slip-close-btn" aria-label="Tutup Dialog">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div style="padding: 24px;">
+        <p class="modal-subtext">Masukkan PIN untuk melanjutkan.</p>
+        <form id="formAdminAuth">
+          <div style="margin-bottom: 16px;">
+            <label for="inputAdminPin">PIN Admin</label>
+            <div class="input-password-wrapper">
+              <input type="password" id="inputAdminPin" required placeholder="Masukkan PIN" autocomplete="current-password">
+              <button type="button" id="toggleAdminPin" class="input-password-toggle" title="Lihat/Sembunyikan PIN" aria-label="Lihat atau sembunyikan PIN">
+                <svg id="eyeAdminIcon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div id="adminAuthAlert" class="lock-alert" style="display:none; margin-bottom: 14px;"></div>
+          <div class="modal-actions-row">
+            <button type="button" id="btnCancelAdminAuth" class="btn-secondary">Batal</button>
+            <button type="submit" id="btnSubmitAdminAuth" class="btn-primary-action">Masuk Admin</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

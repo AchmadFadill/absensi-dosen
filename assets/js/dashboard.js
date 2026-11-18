@@ -11,6 +11,12 @@ let semuaData = [];
 let chartStatus = null;
 let chartMatkul = null;
 
+// State Admin & PIN (Kolom J Sheet Matkul)
+let isAdminLoggedIn = false;
+let savedAdminPin = '';
+let daftarPasswordSah = ['adminidn2026', 'absensidosenpidnb2026'];
+let masterFetchPromise = null;
+
 // Fallback map SKS berdasarkan sheet Matkul (tanpa ubah sheet Absensi)
 const FALLBACK_SKS = {
   'RPL-250101': 3, 'RPL-250102': 3, 'RPL-250103': 3, 'RPL-250104': 3, 'RPL-250105': 4, 'RPL-250106': 4,
@@ -92,6 +98,186 @@ window.addEventListener('themeChanged', () => {
     render();
   }
 });
+
+// ====== SINKRONISASI MASTER PASSWORD & SKS DARI SPREADSHEET ======
+async function ambilMasterPasswords() {
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=master');
+    const mJson = await res.json();
+    if (mJson && mJson.status === 'ok') {
+      const sandiServer = [];
+      if (mJson.passwords && Array.isArray(mJson.passwords)) {
+        sandiServer.push(...mJson.passwords);
+      }
+      if (mJson.password) {
+        sandiServer.push(mJson.password);
+      }
+      if (mJson.dosenPasswords && typeof mJson.dosenPasswords === 'object') {
+        sandiServer.push(...Object.values(mJson.dosenPasswords));
+      }
+      if (sandiServer.length > 0) {
+        daftarPasswordSah = [...new Set([...sandiServer, ...daftarPasswordSah])];
+      }
+
+      if (mJson.matkul && Array.isArray(mJson.matkul)) {
+        mJson.matkul.forEach(m => {
+          const sVal = parseInt(m.sks, 10);
+          if (sVal > 0) {
+            if (m.kode) mapSks[m.kode] = sVal;
+            if (m.nama) mapSks[m.nama] = sVal;
+          }
+        });
+      }
+      return true;
+    }
+  } catch (err) {
+    console.warn('Gagal memuat master data password dari Apps Script:', err);
+  }
+  return false;
+}
+
+// Muat master password secepat mungkin di background
+masterFetchPromise = ambilMasterPasswords();
+
+// ====== MANAJEMEN SESI & AUTH ADMIN (KOLOM J) ======
+const btnAdminLogin = document.getElementById('btnAdminLogin');
+const btnAdminLogout = document.getElementById('btnAdminLogout');
+const adminBadgeWrap = document.getElementById('adminBadgeWrap');
+const modalAdminAuth = document.getElementById('modalAdminAuth');
+const btnCloseAdminModal = document.getElementById('btnCloseAdminModal');
+const btnCancelAdminAuth = document.getElementById('btnCancelAdminAuth');
+const formAdminAuth = document.getElementById('formAdminAuth');
+const inputAdminPin = document.getElementById('inputAdminPin');
+const toggleAdminPin = document.getElementById('toggleAdminPin');
+const eyeAdminIcon = document.getElementById('eyeAdminIcon');
+const adminAuthAlert = document.getElementById('adminAuthAlert');
+const btnSubmitAdminAuth = document.getElementById('btnSubmitAdminAuth');
+
+function updateAdminUI(isAdmin) {
+  if (btnAdminLogin) btnAdminLogin.style.display = isAdmin ? 'none' : 'inline-flex';
+  if (adminBadgeWrap) adminBadgeWrap.style.display = isAdmin ? 'inline-flex' : 'none';
+}
+
+function checkAdminSession() {
+  try {
+    const auth = sessionStorage.getItem('dashboard_admin_auth');
+    const pin = sessionStorage.getItem('dashboard_admin_pin');
+    if (auth === 'true' && pin) {
+      isAdminLoggedIn = true;
+      savedAdminPin = pin;
+      updateAdminUI(true);
+    } else {
+      isAdminLoggedIn = false;
+      savedAdminPin = '';
+      updateAdminUI(false);
+    }
+  } catch (e) {
+    isAdminLoggedIn = false;
+    updateAdminUI(false);
+  }
+}
+
+function bukaModalAdminAuth() {
+  if (modalAdminAuth) {
+    modalAdminAuth.classList.add('active');
+    if (inputAdminPin) {
+      inputAdminPin.value = '';
+      setTimeout(() => inputAdminPin.focus(), 150);
+    }
+    if (adminAuthAlert) {
+      adminAuthAlert.className = 'lock-alert';
+      adminAuthAlert.style.display = 'none';
+      adminAuthAlert.textContent = '';
+    }
+  }
+}
+
+function tutupModalAdminAuth() {
+  if (modalAdminAuth) {
+    modalAdminAuth.classList.remove('active');
+  }
+}
+
+function logoutAdmin() {
+  try {
+    sessionStorage.removeItem('dashboard_admin_auth');
+    sessionStorage.removeItem('dashboard_admin_pin');
+  } catch (e) {}
+  isAdminLoggedIn = false;
+  savedAdminPin = '';
+  updateAdminUI(false);
+  render();
+}
+
+if (btnAdminLogin) btnAdminLogin.addEventListener('click', bukaModalAdminAuth);
+if (btnAdminLogout) btnAdminLogout.addEventListener('click', logoutAdmin);
+if (btnCloseAdminModal) btnCloseAdminModal.addEventListener('click', tutupModalAdminAuth);
+if (btnCancelAdminAuth) btnCancelAdminAuth.addEventListener('click', tutupModalAdminAuth);
+if (modalAdminAuth) {
+  modalAdminAuth.addEventListener('click', (e) => {
+    if (e.target === modalAdminAuth) tutupModalAdminAuth();
+  });
+}
+
+if (toggleAdminPin && inputAdminPin) {
+  toggleAdminPin.addEventListener('click', () => {
+    const isPass = inputAdminPin.getAttribute('type') === 'password';
+    inputAdminPin.setAttribute('type', isPass ? 'text' : 'password');
+    if (eyeAdminIcon) {
+      eyeAdminIcon.innerHTML = isPass ?
+        '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>' :
+        '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+    }
+  });
+}
+
+if (formAdminAuth && inputAdminPin) {
+  formAdminAuth.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pin = inputAdminPin.value.trim();
+    if (!pin) return;
+
+    if (btnSubmitAdminAuth) {
+      btnSubmitAdminAuth.disabled = true;
+      btnSubmitAdminAuth.textContent = 'Memvalidasi...';
+    }
+
+    if (masterFetchPromise) {
+      await masterFetchPromise;
+    } else {
+      await ambilMasterPasswords();
+    }
+
+    const cocok = daftarPasswordSah.some(p => {
+      const strP = String(p).trim();
+      return strP === pin || strP.toLowerCase() === pin.toLowerCase();
+    });
+
+    if (btnSubmitAdminAuth) {
+      btnSubmitAdminAuth.disabled = false;
+      btnSubmitAdminAuth.textContent = 'Masuk Admin';
+    }
+
+    if (cocok) {
+      try {
+        sessionStorage.setItem('dashboard_admin_auth', 'true');
+        sessionStorage.setItem('dashboard_admin_pin', pin);
+      } catch (e) {}
+      isAdminLoggedIn = true;
+      savedAdminPin = pin;
+      updateAdminUI(true);
+      tutupModalAdminAuth();
+      render();
+    } else {
+      if (adminAuthAlert) {
+        adminAuthAlert.className = 'lock-alert err';
+        adminAuthAlert.style.display = 'block';
+        adminAuthAlert.innerHTML = '<strong>PIN salah.</strong> Silakan coba lagi.';
+      }
+      inputAdminPin.focus();
+    }
+  });
+}
 
 function isiFilters() {
   // 1. Populasi Filter Dosen
@@ -313,17 +499,47 @@ function render() {
         </button>`;
       }
 
+      const linkStruk = (d.linkStruk || d.struk || d.linkStrukTransport || '').trim();
+      const nominalRaw = (d.nominalTransport || d.biayaTransport || '').toString().trim();
+      let labelStruk = 'Struk';
+      if (nominalRaw && !isNaN(nominalRaw) && Number(nominalRaw) > 0) {
+        labelStruk = `Struk (Rp ${Number(nominalRaw).toLocaleString('id-ID')})`;
+      }
+
+      let strukHtml = '';
+      if (linkStruk && linkStruk !== '-') {
+        strukHtml = `<button type="button" class="link-materi-btn" style="margin-top:4px;" title="Klik untuk melihat bukti struk transportasi" onclick="tampilkanBukti('${esc(linkStruk)}', '${esc(d.dosen)}', 'Struk Transportasi • ${esc(labelStruk)} • ${esc(d.mataKuliah)}', ${d.pertemuan}, '${esc(d.tanggal)}')">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="12" y1="18" x2="12" y2="12"></line>
+            <line x1="9" y1="15" x2="15" y2="15"></line>
+          </svg>
+          <span>${esc(labelStruk)}</span>
+        </button>`;
+      }
+
       const sksNilai = getSks(d.kodeMatkul, d.mataKuliah);
       const isVerif = (d.statusVerifikasi || '').toLowerCase().includes('terverifikasi');
       const isProses = d.statusVerifikasi === 'Memproses...';
 
       let verifBtnHtml = '';
-      if (isProses) {
-        verifBtnHtml = `<span class="badge warn">Memproses...</span>`;
-      } else if (isVerif) {
-        verifBtnHtml = `<button type="button" class="badge-verif-btn ok" title="Sudah Terverifikasi. Klik untuk membatalkan / ubah status" onclick="verifikasiKehadiran(${d.no}, '${esc(d.kodeMatkul)}', ${d.pertemuan}, 'Menunggu Verifikasi')">✓ Terverifikasi</button>`;
+      if (!isAdminLoggedIn) {
+        // Mode Publik / Dosen: Read-only badge (Dosen TIDAK BISA klik/verifikasi sendiri)
+        if (isVerif) {
+          verifBtnHtml = `<span class="badge ok" title="Sudah diverifikasi oleh Admin">✓ Terverifikasi</span>`;
+        } else {
+          verifBtnHtml = `<span class="badge warn" title="Menunggu verifikasi oleh Admin">Menunggu Verifikasi</span>`;
+        }
       } else {
-        verifBtnHtml = `<button type="button" class="btn-verif-action" title="Klik untuk langsung memverifikasi kehadiran ini" onclick="verifikasiKehadiran(${d.no}, '${esc(d.kodeMatkul)}', ${d.pertemuan}, 'Terverifikasi')">✓ Verifikasi</button>`;
+        // Mode Admin: Tombol interaktif untuk memverifikasi atau membatalkan status
+        if (isProses) {
+          verifBtnHtml = `<span class="badge warn">Memproses...</span>`;
+        } else if (isVerif) {
+          verifBtnHtml = `<button type="button" class="badge-verif-btn ok" title="Sudah Terverifikasi. Klik untuk membatalkan / ubah status" onclick="verifikasiKehadiran(${d.no}, '${esc(d.kodeMatkul)}', ${d.pertemuan}, 'Menunggu Verifikasi')">✓ Terverifikasi</button>`;
+        } else {
+          verifBtnHtml = `<button type="button" class="btn-verif-action" title="Klik untuk langsung memverifikasi kehadiran ini" onclick="verifikasiKehadiran(${d.no}, '${esc(d.kodeMatkul)}', ${d.pertemuan}, 'Terverifikasi')">✓ Verifikasi</button>`;
+        }
       }
 
       return `<tr>
@@ -341,7 +557,10 @@ function render() {
         <td><span class="badge ${badgeMetode}">${esc(d.metode || '-')}</span></td>
         <td>${esc(d.lokasi || '-')}</td>
         <td>${materiHtml}</td>
-        <td style="text-align:center;">${buktiHtml}</td>
+        <td style="text-align:center;">
+          ${buktiHtml}
+          ${strukHtml ? `<div style="margin-top:4px;">${strukHtml}</div>` : ''}
+        </td>
         <td>${esc(d.statusKehadiran)}</td>
         <td>${verifBtnHtml}</td>
       </tr>`;
@@ -411,6 +630,12 @@ function tampilkanBukti(url, dosen, matkul, pertemuan, tanggal) {
 
 // ====== FUNGSI VERIFIKASI LANGSUNG DARI WEB ======
 async function verifikasiKehadiran(no, kodeMatkul, pertemuan, statusBaru) {
+  if (!isAdminLoggedIn || !savedAdminPin) {
+    alert('Akses ditolak: Silakan Masuk sebagai Admin terlebih dahulu.');
+    bukaModalAdminAuth();
+    return;
+  }
+
   const konfirm = confirm(`Apakah Anda yakin ingin mengubah status verifikasi ini menjadi "${statusBaru}"?`);
   if (!konfirm) return;
 
@@ -430,6 +655,7 @@ async function verifikasiKehadiran(no, kodeMatkul, pertemuan, statusBaru) {
     const payload = {
       action: 'verifikasi',
       secret: SECRET_KEY,
+      pin: savedAdminPin, // PIN Admin dikirim ke server untuk validasi ganda
       no: no,
       kodeMatkul: kodeMatkul,
       pertemuan: pertemuan,
@@ -448,7 +674,7 @@ async function verifikasiKehadiran(no, kodeMatkul, pertemuan, statusBaru) {
     }
     render();
   } catch(err) {
-    alert('Gagal memverifikasi: ' + err.message);
+    alert('Gagal memproses verifikasi. Silakan coba lagi.');
     if (item) {
       item.statusVerifikasi = statusLama;
       render();
@@ -460,26 +686,12 @@ async function verifikasiKehadiran(no, kodeMatkul, pertemuan, statusBaru) {
 window.tampilkanBukti = tampilkanBukti;
 window.verifikasiKehadiran = verifikasiKehadiran;
 window.tutupModalBukti = tutupModalBukti;
+window.bukaModalAdminAuth = bukaModalAdminAuth;
+window.tutupModalAdminAuth = tutupModalAdminAuth;
 
 async function muatData() {
+  checkAdminSession();
   try {
-    // Muat master SKS di background jika tersedia
-    fetch(SCRIPT_URL + '?action=master')
-      .then(r => r.json())
-      .then(mJson => {
-        if (mJson && mJson.matkul && Array.isArray(mJson.matkul)) {
-          mJson.matkul.forEach(m => {
-            const sVal = parseInt(m.sks, 10);
-            if (sVal > 0) {
-              if (m.kode) mapSks[m.kode] = sVal;
-              if (m.nama) mapSks[m.nama] = sVal;
-            }
-          });
-          if (semuaData && semuaData.length > 0) render();
-        }
-      })
-      .catch(() => {});
-
     const res = await fetch(SCRIPT_URL + '?action=data');
     const json = await res.json();
     if (json.status !== 'ok') throw new Error(json.message);
@@ -495,8 +707,8 @@ async function muatData() {
     const pesanEl = document.getElementById('pesan');
     if (pesanEl) {
       pesanEl.innerHTML =
-        '<div style="color:var(--error);font-weight:600;margin-bottom:6px;">Gagal memuat data absensi.</div>' +
-        '<div style="font-size:12px;color:var(--text-secondary);">' + esc(err.message) + '</div>';
+        '<div style="color:var(--error);font-weight:600;margin-bottom:6px;">Gagal memuat data.</div>' +
+        '<div style="font-size:12px;color:var(--text-secondary);">Silakan periksa koneksi internet Anda lalu coba lagi.</div>';
     }
   }
 }

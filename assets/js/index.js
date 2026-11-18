@@ -47,6 +47,7 @@ let masterData = {
   matkul: []
 };
 
+// DOM Elements
 const selDosen = document.getElementById('dosen');
 const selSemester = document.getElementById('semester');
 const selPertemuan = document.getElementById('pertemuan');
@@ -63,6 +64,18 @@ const form = document.getElementById('formAbsensi');
 const btnSubmit = document.getElementById('btnSubmit');
 const statusBox = document.getElementById('status');
 
+// Elements Struk Transportasi (Opsional)
+const selAdaTransport = document.getElementById('adaTransport');
+const inputNominalTransport = document.getElementById('nominalTransport');
+const wrapUploadTransport = document.getElementById('wrapUploadTransport');
+const fileTransportInput = document.getElementById('fileTransport');
+const dropzoneTransport = document.getElementById('dropzoneTransport');
+const previewTransport = document.getElementById('previewTransport');
+const thumbTransport = document.getElementById('thumbTransport');
+const nameTransport = document.getElementById('nameTransport');
+const sizeTransport = document.getElementById('sizeTransport');
+const btnRemoveTransport = document.getElementById('btnRemoveTransport');
+
 // Inisialisasi dropdown pertemuan (1 - 16)
 if (selPertemuan) {
   selPertemuan.innerHTML = '<option value="">-- Pilih Pertemuan --</option>' +
@@ -74,8 +87,25 @@ if (inputTanggal) {
   inputTanggal.value = new Date().toISOString().slice(0, 10);
 }
 
+// ====== LOGIKA TOGGLE STRUK TRANSPORTASI ======
+function updateTransportVisibility() {
+  const ada = selAdaTransport && selAdaTransport.value === 'ya';
+  if (wrapUploadTransport) {
+    wrapUploadTransport.style.display = ada ? 'block' : 'none';
+  }
+  if (!ada) {
+    if (inputNominalTransport) inputNominalTransport.value = '';
+    resetTransportFileState();
+  }
+}
+
+if (selAdaTransport) {
+  selAdaTransport.addEventListener('change', updateTransportVisibility);
+}
+
 // ====== FILE UPLOAD & PREVIEW LOGIC ======
 let activeObjectUrl = null;
+let activeTransportObjectUrl = null;
 
 function formatBytes(bytes) {
   if (!bytes || bytes === 0) return '0 B';
@@ -85,6 +115,7 @@ function formatBytes(bytes) {
   return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i];
 }
 
+// 1. Bukti Kelas
 function resetFileState() {
   if (fileInput) fileInput.value = '';
   if (activeObjectUrl) {
@@ -142,7 +173,6 @@ if (btnRemoveFile) {
   btnRemoveFile.addEventListener('click', resetFileState);
 }
 
-// Drag & drop listeners
 if (dropzone) {
   ['dragenter', 'dragover'].forEach(eventName => {
     dropzone.addEventListener(eventName, (e) => {
@@ -163,6 +193,86 @@ if (dropzone) {
     if (dt && dt.files && dt.files[0]) {
       fileInput.files = dt.files;
       handleFile(dt.files[0]);
+    }
+  });
+}
+
+// 2. Struk Transportasi
+function resetTransportFileState() {
+  if (fileTransportInput) fileTransportInput.value = '';
+  if (activeTransportObjectUrl) {
+    URL.revokeObjectURL(activeTransportObjectUrl);
+    activeTransportObjectUrl = null;
+  }
+  if (previewTransport) previewTransport.classList.remove('active');
+  if (dropzoneTransport) dropzoneTransport.style.display = 'block';
+}
+
+function handleTransportFile(file) {
+  if (!file) return;
+
+  if (file.size > 8 * 1024 * 1024) {
+    if (statusBox) {
+      statusBox.className = 'status err';
+      statusBox.textContent = 'Ukuran file struk melebihi 8 MB. Harap pilih foto/dokumen yang lebih kecil.';
+    }
+    resetTransportFileState();
+    return;
+  }
+
+  if (activeTransportObjectUrl) {
+    URL.revokeObjectURL(activeTransportObjectUrl);
+    activeTransportObjectUrl = null;
+  }
+
+  if (nameTransport) nameTransport.textContent = file.name;
+  if (sizeTransport) sizeTransport.textContent = formatBytes(file.size);
+
+  if (thumbTransport) {
+    if (file.type.startsWith('image/')) {
+      activeTransportObjectUrl = URL.createObjectURL(file);
+      thumbTransport.innerHTML = `<img src="${activeTransportObjectUrl}" alt="Pratinjau Struk">`;
+    } else {
+      thumbTransport.innerHTML = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`;
+    }
+  }
+
+  if (dropzoneTransport) dropzoneTransport.style.display = 'none';
+  if (previewTransport) previewTransport.classList.add('active');
+}
+
+if (fileTransportInput) {
+  fileTransportInput.addEventListener('change', () => {
+    if (fileTransportInput.files && fileTransportInput.files[0]) {
+      handleTransportFile(fileTransportInput.files[0]);
+    }
+  });
+}
+
+if (btnRemoveTransport) {
+  btnRemoveTransport.addEventListener('click', resetTransportFileState);
+}
+
+if (dropzoneTransport) {
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropzoneTransport.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      dropzoneTransport.classList.add('drag-over');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropzoneTransport.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      dropzoneTransport.classList.remove('drag-over');
+    });
+  });
+
+  dropzoneTransport.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    if (dt && dt.files && dt.files[0]) {
+      fileTransportInput.files = dt.files;
+      handleTransportFile(dt.files[0]);
     }
   });
 }
@@ -337,8 +447,41 @@ if (form) {
 
     if (file.size > 8 * 1024 * 1024) {
       statusBox.className = 'status err';
-      statusBox.textContent = 'Ukuran file melebihi 8 MB. Harap kurangi ukuran file.';
+      statusBox.textContent = 'Ukuran file bukti kelas melebihi 8 MB. Harap kurangi ukuran file.';
       return;
+    }
+
+    // Cek struk transportasi jika "Ada" dipilih
+    const adaStruk = selAdaTransport && selAdaTransport.value === 'ya';
+    let nominalTransport = 0;
+    let fileTransportBase64 = '';
+    let namaFileTransport = '';
+    let mimeFileTransport = '';
+
+    if (adaStruk) {
+      const nominalRaw = inputNominalTransport ? inputNominalTransport.value.trim() : '';
+      if (!nominalRaw || isNaN(nominalRaw) || Number(nominalRaw) <= 0) {
+        statusBox.className = 'status err';
+        statusBox.textContent = 'Harap masukkan jumlah biaya transportasi yang valid sesuai struk.';
+        if (inputNominalTransport) inputNominalTransport.focus();
+        return;
+      }
+      nominalTransport = Number(nominalRaw);
+
+      const fileTrans = fileTransportInput && fileTransportInput.files ? fileTransportInput.files[0] : null;
+      if (!fileTrans) {
+        statusBox.className = 'status err';
+        statusBox.textContent = 'Harap unggah bukti struk transportasi yang Anda pilih.';
+        return;
+      }
+      if (fileTrans.size > 8 * 1024 * 1024) {
+        statusBox.className = 'status err';
+        statusBox.textContent = 'Ukuran file struk transportasi melebihi 8 MB. Harap kurangi ukuran file.';
+        return;
+      }
+      fileTransportBase64 = await readFileAsBase64(fileTrans);
+      namaFileTransport = fileTrans.name;
+      mimeFileTransport = fileTrans.type || 'image/jpeg';
     }
 
     const kodeMatkul = selMatkul.value;
@@ -364,7 +507,7 @@ if (form) {
     }
 
     btnSubmit.disabled = true;
-    btnSubmit.textContent = 'Mengonversi bukti kelas...';
+    btnSubmit.textContent = 'Mengonversi berkas...';
     statusBox.className = 'status';
 
     try {
@@ -380,12 +523,21 @@ if (form) {
         pertemuan: parseInt(pertemuan, 10),
         tanggal: tanggal,
         linkMateri: linkMateri,
+        materi: linkMateri,
         statusKehadiran: statusKehadiran,
+        status: statusKehadiran,
         lokasi: lokasi,
         metode: metode,
         fileBase64: fileBase64,
         namaFile: file.name,
-        mimeFile: file.type || 'image/jpeg'
+        mimeFile: file.type || 'image/jpeg',
+        // Struk Transportasi (Opsional)
+        adaStrukTransport: adaStruk ? 'Ya' : 'Tidak',
+        nominalTransport: nominalTransport,
+        biayaTransport: nominalTransport,
+        fileTransportBase64: fileTransportBase64,
+        namaFileTransport: namaFileTransport,
+        mimeFileTransport: mimeFileTransport
       };
 
       const res = await fetch(SCRIPT_URL, {
@@ -401,25 +553,29 @@ if (form) {
 
       if (json && json.status === 'ok') {
         statusBox.className = 'status ok';
-        statusBox.textContent = json.message || 'Data absensi dan bukti kelas berhasil disimpan.';
+        statusBox.textContent = 'Data absensi berhasil disimpan.';
         form.reset();
         resetFileState();
+        resetTransportFileState();
+        updateTransportVisibility();
         inputTanggal.value = new Date().toISOString().slice(0, 10);
         updateMatkulOptions();
       } else if (json && json.status === 'error') {
         statusBox.className = 'status err';
-        statusBox.textContent = 'Gagal menyimpan: ' + (json.message || 'Terjadi kesalahan pada sistem.');
+        statusBox.textContent = json.message ? `Gagal: ${json.message}` : 'Gagal menyimpan data. Silakan coba lagi.';
       } else {
         statusBox.className = 'status ok';
-        statusBox.textContent = 'Absensi berhasil dikirim.';
+        statusBox.textContent = 'Data absensi berhasil dikirim.';
         form.reset();
         resetFileState();
+        resetTransportFileState();
+        updateTransportVisibility();
         inputTanggal.value = new Date().toISOString().slice(0, 10);
         updateMatkulOptions();
       }
     } catch (err) {
       statusBox.className = 'status err';
-      statusBox.textContent = 'Gagal mengirim data. Periksa koneksi internet lalu coba lagi.';
+      statusBox.textContent = 'Gagal mengirim data. Silakan periksa koneksi internet Anda lalu coba lagi.';
     } finally {
       btnSubmit.disabled = false;
       btnSubmit.textContent = 'Kirim Absensi';

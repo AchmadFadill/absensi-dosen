@@ -52,6 +52,13 @@ function formatTanggalSingkat(raw) {
   return d.getDate() + ' ' + bln[d.getMonth()] + ' ' + d.getFullYear();
 }
 
+function formatTanggalLengkap(dateInput) {
+  const d = dateInput ? new Date(dateInput) : new Date();
+  if (isNaN(d.getTime())) return '-';
+  const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
+}
+
 // ====== SINKRONISASI MASTER DATA LANGSUNG SAAT HALAMAN DIBUKA ======
 let masterFetchPromise = null;
 
@@ -166,7 +173,7 @@ if (formAuth && inputPass) {
     const originalBtnText = btnUnlock ? btnUnlock.innerHTML : '';
     if (btnUnlock) {
       btnUnlock.disabled = true;
-      btnUnlock.innerHTML = '<span>Memverifikasi kata sandi...</span>';
+      btnUnlock.innerHTML = '<span>Memverifikasi PIN...</span>';
     }
     if (lockAlert) {
       lockAlert.className = 'lock-alert';
@@ -199,8 +206,7 @@ if (formAuth && inputPass) {
     } else {
       if (lockAlert) {
         lockAlert.className = 'lock-alert err';
-        lockAlert.innerHTML = '<strong>Kata sandi tidak sesuai.</strong><br>' +
-          'Silakan periksa kata sandi di Kolom J Sheet Matkul. Jika baru ditambahkan/diubah di Spreadsheet, pastikan file Apps Script sudah di-<strong>Deploy > Manage deployments > New version</strong>.';
+        lockAlert.innerHTML = '<strong>PIN salah.</strong> Silakan coba lagi.';
       }
       inputPass.focus();
     }
@@ -228,8 +234,8 @@ async function muatDataPortal() {
   } catch(err) {
     if (loadingPesan) {
       loadingPesan.innerHTML = 
-        '<div style="color:var(--error);font-weight:600;margin-bottom:6px;">Gagal memuat data honor.</div>' +
-        '<div style="font-size:12px;color:var(--text-secondary);">' + esc(err.message) + '</div>';
+        '<div style="color:var(--error);font-weight:600;margin-bottom:6px;">Gagal memuat data.</div>' +
+        '<div style="font-size:12px;color:var(--text-secondary);">Silakan periksa koneksi internet Anda lalu coba lagi.</div>';
     }
   }
 }
@@ -309,12 +315,16 @@ function renderGaji() {
     const keyMk = kode !== '-' ? kode : namaMk;
     const sks = getSks(kode, namaMk);
 
+    const transportSesi = Number(sesi.nominalTransport || sesi.biayaTransport || 0) || 0;
+
     if (!perDosen[dosen]) {
       perDosen[dosen] = {
         dosen: dosen,
         matkulMap: {},
         totalSesi: 0,
         totalSksAkumulasi: 0,
+        honorPerkuliahan: 0,
+        totalTransport: 0,
         totalHonor: 0
       };
     }
@@ -336,7 +346,9 @@ function renderGaji() {
 
     perDosen[dosen].totalSesi += 1;
     perDosen[dosen].totalSksAkumulasi += sks;
-    perDosen[dosen].totalHonor += (sks * TARIF_PER_SKS);
+    perDosen[dosen].honorPerkuliahan += (sks * TARIF_PER_SKS);
+    perDosen[dosen].totalTransport += transportSesi;
+    perDosen[dosen].totalHonor = perDosen[dosen].honorPerkuliahan + perDosen[dosen].totalTransport;
   });
 
   rekapDosenTerhitung = Object.values(perDosen);
@@ -354,6 +366,13 @@ function renderGaji() {
   if (elTotalSks) elTotalSks.textContent = totalSemuaSks + ' SKS';
   if (elTotalSesi) elTotalSesi.textContent = totalSemuaSesi + ' Sesi';
 
+  const elTfootTotalSesi = document.getElementById('tfootTotalSesi');
+  const elTfootTotalSks = document.getElementById('tfootTotalSks');
+  const elTfootTotalHonor = document.getElementById('tfootTotalHonor');
+  if (elTfootTotalSesi) elTfootTotalSesi.textContent = totalSemuaSesi + ' Sesi';
+  if (elTfootTotalSks) elTfootTotalSks.textContent = totalSemuaSks + ' SKS';
+  if (elTfootTotalHonor) elTfootTotalHonor.textContent = rupiah(totalSemuaHonor);
+
   // 3. Render Tabel Rekapitulasi per Dosen
   const tbodyDosen = document.getElementById('tabelRekapDosen');
   if (tbodyDosen) {
@@ -369,6 +388,10 @@ function renderGaji() {
           </div>`;
         }).join('');
 
+        const transportNote = d.totalTransport > 0
+          ? `<div style="font-size:11px;color:#0284c7;font-weight:600;margin-top:3px;">+ Transport: ${rupiah(d.totalTransport)}</div>`
+          : '';
+
         return `<tr>
           <td style="color:var(--text-muted);">${idx + 1}</td>
           <td><strong>${esc(d.dosen)}</strong></td>
@@ -383,11 +406,12 @@ function renderGaji() {
             <code style="font-size:11.5px;background:var(--surface-subtle);padding:3px 6px;border-radius:4px;border:1px solid var(--border);">
               ${d.totalSksAkumulasi} SKS × Rp 50.000
             </code>
+            ${transportNote}
           </td>
           <td style="text-align:right;">
             <span style="font-size:14px;font-weight:700;color:var(--accent);">${rupiah(d.totalHonor)}</span>
           </td>
-          <td style="text-align:center;">
+          <td style="text-align:center;" class="col-aksi">
             <button type="button" class="btn-secondary" style="height:32px;padding:0 10px;font-size:11.5px;" onclick="bukaModalSlip('${esc(d.dosen)}')">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -455,30 +479,71 @@ if (slipModal) {
   });
 }
 
+// Helper Pengatur Ukuran & Orientasi Kertas Cetak Dinamis (A4 Portrait / Landscape)
+function setPrintPageStyle(cssText) {
+  let styleEl = document.getElementById('printPageOrientation');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'printPageOrientation';
+    document.head.appendChild(styleEl);
+  }
+  styleEl.textContent = cssText;
+}
+
 if (btnPrintSlip) {
   btnPrintSlip.addEventListener('click', () => {
-    window.print();
+    setPrintPageStyle('@page { size: A4 portrait; margin: 12mm 15mm 15mm 15mm; }');
+    document.body.classList.add('is-printing-slip');
+    document.body.classList.remove('is-printing-rekap');
+    setTimeout(() => {
+      window.print();
+    }, 50);
   });
 }
 
 if (btnCetakRekap) {
   btnCetakRekap.addEventListener('click', () => {
-    window.print();
+    // Isi meta kop dokumen rekap resmi
+    const pBulan = (filterBulan && filterBulan.value) || 'Semua Periode Tercatat';
+    const pDosen = (filterDosen && filterDosen.value) ? ` • Dosen: ${filterDosen.value}` : '';
+    const elPeriode = document.getElementById('printRekapPeriode');
+    const elTglCetak = document.getElementById('printRekapTglCetak');
+    const elTglSign = document.getElementById('printRekapTglSign');
+    
+    if (elPeriode) elPeriode.textContent = pBulan + pDosen;
+    if (elTglCetak) elTglCetak.textContent = formatTanggalLengkap(new Date());
+    if (elTglSign) elTglSign.textContent = formatTanggalLengkap(new Date());
+
+    setPrintPageStyle('@page { size: A4 landscape; margin: 10mm 12mm 12mm 12mm; }');
+    document.body.classList.add('is-printing-rekap');
+    document.body.classList.remove('is-printing-slip');
+    setTimeout(() => {
+      window.print();
+    }, 50);
   });
 }
+
+window.addEventListener('afterprint', () => {
+  document.body.classList.remove('is-printing-slip');
+  document.body.classList.remove('is-printing-rekap');
+});
 
 window.bukaModalSlip = function(namaDosen) {
   const dataDosen = rekapDosenTerhitung.find(d => d.dosen === namaDosen);
   if (!dataDosen) return;
 
   const periodeAktif = (filterBulan && filterBulan.value) || 'Semua Periode Tercatat';
-  const tglHariIni = formatTanggalSingkat(new Date().toISOString());
+  const tglHariIni = formatTanggalLengkap(new Date());
 
   const elSlipDosen = document.getElementById('slipDosen');
   const elSlipPeriode = document.getElementById('slipPeriode');
   const elSlipTglCetak = document.getElementById('slipTglCetak');
   const elSlipTglSign = document.getElementById('slipTglSign');
   const elSlipSignDosen = document.getElementById('slipSignDosen');
+  const elSlipHonorSks = document.getElementById('slipHonorSks');
+  const elSlipTransport = document.getElementById('slipTransport');
+  const elSubtotalMatkul = document.getElementById('slipSubtotalMatkul');
+  const elTransportTfoot = document.getElementById('slipTransportTfoot');
   const elSlipTotalAmount = document.getElementById('slipTotalAmount');
   const elSlipTabelBody = document.getElementById('slipTabelBody');
 
@@ -487,6 +552,10 @@ window.bukaModalSlip = function(namaDosen) {
   if (elSlipTglCetak) elSlipTglCetak.textContent = tglHariIni;
   if (elSlipTglSign) elSlipTglSign.textContent = tglHariIni;
   if (elSlipSignDosen) elSlipSignDosen.textContent = '( ' + dataDosen.dosen + ' )';
+  if (elSlipHonorSks) elSlipHonorSks.textContent = rupiah(dataDosen.honorPerkuliahan);
+  if (elSlipTransport) elSlipTransport.textContent = rupiah(dataDosen.totalTransport);
+  if (elSubtotalMatkul) elSubtotalMatkul.textContent = rupiah(dataDosen.honorPerkuliahan);
+  if (elTransportTfoot) elTransportTfoot.textContent = rupiah(dataDosen.totalTransport);
   if (elSlipTotalAmount) elSlipTotalAmount.textContent = rupiah(dataDosen.totalHonor);
 
   if (elSlipTabelBody) {
