@@ -21,10 +21,10 @@
     })();
   </script>
 
-  <!-- Font: Plus Jakarta Sans for a refined academic & institutional look -->
+  <!-- Font: Inter for a refined modern institutional look -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- External Stylesheet (Unified Attenad Design System) -->
   <link rel="stylesheet" href="style.css?v=2.2">
@@ -62,6 +62,13 @@
               <rect x="3" y="16" width="7" height="5"></rect>
             </svg>
             <span>Dashboard</span>
+          </a>
+          <a href="gaji.html" class="tab-link">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span>Rekap Pertemuan 🔒</span>
           </a>
         </nav>
 
@@ -146,12 +153,12 @@
           </div>
         </div>
 
-        <div class="field">
+        <div class="field is-disabled" id="fieldMatkul">
           <label for="kodeMatkul">Mata Kuliah <span>*</span></label>
           <select id="kodeMatkul" required disabled>
-            <option value="">-- Pilih Semester Terlebih Dahulu --</option>
+            <option value="">-- Pilih Dosen & Semester Terlebih Dahulu --</option>
           </select>
-          <div class="hint">Daftar mata kuliah otomatis disesuaikan dengan semester yang dipilih.</div>
+          <div class="hint">Daftar mata kuliah otomatis disesuaikan dengan dosen dan semester yang dipilih.</div>
         </div>
 
         <div class="field">
@@ -436,14 +443,36 @@
   function updateMatkulOptions() {
     const sem = String(selSemester.value || '').trim();
     const dosen = (selDosen.value || '').trim();
+    const fieldMatkul = document.getElementById('fieldMatkul') || selMatkul.closest('.field');
 
-    if (!sem) {
-      selMatkul.innerHTML = '<option value="">-- Pilih Semester Terlebih Dahulu --</option>';
+    // 1. Jika Dosen dan Semester sama-sama belum dipilih
+    if (!dosen && !sem) {
+      selMatkul.innerHTML = '<option value="">-- Pilih Dosen & Semester Terlebih Dahulu --</option>';
       selMatkul.disabled = true;
+      if (fieldMatkul) fieldMatkul.classList.add('is-disabled');
       return;
     }
 
+    // 2. Jika Dosen belum dipilih
+    if (!dosen) {
+      selMatkul.innerHTML = '<option value="">-- Pilih Dosen Terlebih Dahulu --</option>';
+      selMatkul.disabled = true;
+      if (fieldMatkul) fieldMatkul.classList.add('is-disabled');
+      return;
+    }
+
+    // 3. Jika Semester belum dipilih
+    if (!sem) {
+      selMatkul.innerHTML = '<option value="">-- Pilih Semester Terlebih Dahulu --</option>';
+      selMatkul.disabled = true;
+      if (fieldMatkul) fieldMatkul.classList.add('is-disabled');
+      return;
+    }
+
+    // 4. Kedua parameter (Dosen & Semester) telah terpilih -> aktifkan pilihan
     selMatkul.disabled = false;
+    if (fieldMatkul) fieldMatkul.classList.remove('is-disabled');
+
     const matkulInSem = masterData.matkul.filter(m => String(m.semester) === sem);
 
     if (matkulInSem.length === 0) {
@@ -451,15 +480,16 @@
       return;
     }
 
-    const dosenMatkul = dosen ? matkulInSem.filter(m => m.dosen === dosen) : [];
-    const otherMatkul = dosen ? matkulInSem.filter(m => m.dosen !== dosen) : matkulInSem;
+    const dosenMatkul = matkulInSem.filter(m => m.dosen === dosen);
+    const otherMatkul = matkulInSem.filter(m => m.dosen !== dosen);
 
     let html = '<option value="">-- Pilih Mata Kuliah --</option>';
 
-    if (dosen && dosenMatkul.length > 0) {
+    if (dosenMatkul.length > 0) {
       html += `<optgroup label="Diampu oleh ${dosen}">`;
       dosenMatkul.forEach(m => {
-        html += `<option value="${m.kode}">${m.kode} - ${m.nama}</option>`;
+        const sksBadge = m.sks ? ` (${m.sks} SKS)` : '';
+        html += `<option value="${m.kode}">${m.kode} - ${m.nama}${sksBadge}</option>`;
       });
       html += `</optgroup>`;
 
@@ -467,15 +497,19 @@
         html += `<optgroup label="Mata Kuliah Lainnya (Semester ${sem})">`;
         otherMatkul.forEach(m => {
           const infoDosen = m.dosen ? ` (${m.dosen})` : '';
-          html += `<option value="${m.kode}">${m.kode} - ${m.nama}${infoDosen}</option>`;
+          const sksBadge = m.sks ? ` [${m.sks} SKS]` : '';
+          html += `<option value="${m.kode}">${m.kode} - ${m.nama}${sksBadge}${infoDosen}</option>`;
         });
         html += `</optgroup>`;
       }
     } else {
+      html += `<optgroup label="Semua Mata Kuliah (Semester ${sem})">`;
       matkulInSem.forEach(m => {
         const infoDosen = m.dosen ? ` (${m.dosen})` : '';
-        html += `<option value="${m.kode}">${m.kode} - ${m.nama}${infoDosen}</option>`;
+        const sksBadge = m.sks ? ` [${m.sks} SKS]` : '';
+        html += `<option value="${m.kode}">${m.kode} - ${m.nama}${sksBadge}${infoDosen}</option>`;
       });
+      html += `</optgroup>`;
     }
 
     selMatkul.innerHTML = html;

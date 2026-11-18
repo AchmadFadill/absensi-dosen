@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rekap Pertemuan Dosen - Politeknik IDN Bogor</title>
+  
+  <!-- Early Theme Initialization to prevent Flash of Unstyled Theme (FOUC) -->
+  <script>
+    (function() {
+      try {
+        var savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+          document.documentElement.setAttribute('data-theme', savedTheme);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=2.2">
+</head>
+<body>
+
+  <!-- Attenad Modern Institutional Header -->
+  <header class="attenad-header">
+    <div class="attenad-nav-bar">
+      <div class="attenad-nav-inner">
+        <!-- Brand Logo -->
+        <a href="dashboard.html" class="attenad-brand" title="Sistem Informasi Akademik Politeknik IDN Bogor">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3L1 9L12 15L21 10.09V17H23V9M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z"/>
+            </svg>
+          </div>
+          <span class="brand-name">Sistem Absensi Dosen</span>
+        </a>
+
+        <!-- Center Tabs -->
+        <nav class="attenad-tabs" aria-label="Navigasi Halaman">
+          <a href="index.html" class="tab-link">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            <span>Form Absensi</span>
+          </a>
+          <a href="dashboard.html" class="tab-link">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="9"></rect>
+              <rect x="14" y="3" width="7" height="5"></rect>
+              <rect x="14" y="12" width="7" height="9"></rect>
+              <rect x="3" y="16" width="7" height="5"></rect>
+            </svg>
+            <span>Dashboard</span>
+          </a>
+          <a href="gaji.html" class="tab-link active" aria-current="page">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span>Rekap Pertemuan 🔒</span>
+          </a>
+        </nav>
+
+        <!-- Right Utilities -->
+        <div class="attenad-actions">
+          <button type="button" id="btnLogout" class="btn-logout" style="display:none;" title="Kunci halaman dan keluar">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span>Kunci Portal</span>
+          </button>
+
+          <!-- Theme Toggle Button -->
+          <button type="button" id="themeToggle" class="theme-toggle" aria-label="Ganti mode tampilan" title="Beralih ke Mode Gelap">
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================
+       GERBANG KEAMANAN / LOCK SCREEN
+       ========================================== -->
+  <div id="lockScreen" class="lock-screen-wrapper">
+    <div class="lock-card">
+      <div class="lock-icon-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          <circle cx="12" cy="16" r="1.5"></circle>
+        </svg>
+      </div>
+      <h1>Portal Rekap Pertemuan</h1>
+      <p>Halaman ini terproteksi. Masukkan kata sandi akses dari Spreadsheet (Kolom J pada sheet Matkul) untuk melihat rekapitulasi pertemuan dosen.</p>
+
+      <form id="formAuth">
+        <div class="lock-input-group">
+          <input type="password" id="inputPass" placeholder="Masukkan kata sandi..." autocomplete="current-password" required autofocus>
+          <button type="button" id="togglePass" class="toggle-pass-btn" aria-label="Tampilkan kata sandi">
+            <svg id="eyeIcon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+
+        <div id="lockAlert" class="lock-alert"></div>
+
+        <button type="submit" id="btnUnlock" style="width:100%;">
+          <span>Buka Rekap Pertemuan</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MAIN HONOR PORTAL (TERBUKA SETELAH LOGIN)
+       ========================================== -->
+  <div id="portalContent" style="display:none;">
+    
+    <!-- Sub-header Greeting & Filter Banner -->
+    <div class="attenad-sub-banner">
+      <div class="attenad-sub-inner">
+        <div class="user-greeting">
+          <div class="avatar-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+          </div>
+          <div class="greeting-text">
+            <div class="greeting-title">Rekapitulasi Pertemuan Dosen</div>
+            <p class="greeting-subtitle">Politeknik IDN Bogor • Standar Rp 50.000 / SKS per Pertemuan</p>
+          </div>
+        </div>
+
+        <div class="sub-controls">
+          <!-- Filter Periode Bulan -->
+          <div class="filter-dropdown-wrap" title="Pilih Bulan & Tahun Pembayaran">
+            <svg class="pill-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <select id="filterBulan" class="filter-dropdown-select" aria-label="Filter berdasarkan Bulan">
+              <option value="">Semua Periode</option>
+            </select>
+          </div>
+
+          <!-- Filter Dosen -->
+          <div class="filter-dropdown-wrap" title="Pilih Dosen Pengampu">
+            <svg class="pill-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+            </svg>
+            <select id="filterDosen" class="filter-dropdown-select" aria-label="Filter berdasarkan Dosen">
+              <option value="">Semua Dosen</option>
+            </select>
+          </div>
+
+          <!-- Filter Status Kehadiran -->
+          <div class="filter-dropdown-wrap" title="Filter Kehadiran yang dihitung honornya">
+            <svg class="pill-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <select id="filterStatus" class="filter-dropdown-select" aria-label="Status Kehadiran">
+              <option value="Hadir">Hanya Status Hadir (Rekomendasi)</option>
+              <option value="Semua">Semua Status Kehadiran</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Dashboard Container -->
+    <main class="container">
+      <div id="loadingPesan" class="pesan">
+        <div class="pesan-spinner"></div>
+        <div>Mengkalkulasi honor berdasarkan data kehadiran & SKS...</div>
+      </div>
+
+      <div id="dataContent" style="display:none;">
+        <!-- KPI Cards Grid -->
+        <section class="kpi">
+          <!-- Card 1: Total Anggaran Honor (Highlight Blue) -->
+          <div class="kpi-card kpi-card-highlight">
+            <div class="kpi-top">
+              <div class="kpi-icon-box icon-white">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="1" x2="12" y2="23"></line>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="value" id="kpiTotalGaji">Rp 0</div>
+            <div class="label">Total Pembayaran Honor Periode Ini</div>
+          </div>
+
+          <!-- Card 2: Total SKS Terlaksana -->
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <div class="kpi-icon-box icon-blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                  <path d="M2 17l10 5 10-5"></path>
+                  <path d="M2 12l10 5 10-5"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="value" id="kpiTotalSks">0 SKS</div>
+            <div class="label">Akumulasi SKS Terlaksana (Σ Sesi × SKS)</div>
+          </div>
+
+          <!-- Card 3: Total Sesi Pertemuan -->
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <div class="kpi-icon-box icon-amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </div>
+            </div>
+            <div class="value" id="kpiTotalSesi">0</div>
+            <div class="label">Total Sesi Pertemuan Mengajar</div>
+          </div>
+
+          <!-- Card 4: Tarif Per SKS -->
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <div class="kpi-icon-box icon-purple">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M12 6v6l4 2"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="value">Rp 50.000</div>
+            <div class="label">Tarif Honor / SKS per Pertemuan</div>
+          </div>
+        </section>
+
+        <!-- Panel 1: Ringkasan Honor per Dosen -->
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Rekapitulasi Honor per Dosen</h2>
+              <p style="font-size:12px;color:var(--text-secondary);margin-top:2px;">
+                Dihitung berdasarkan rumus: <code>Σ (Pertemuan Hadir × Bobot SKS) × Rp 50.000</code>
+              </p>
+            </div>
+            <button type="button" id="btnCetakRekap" class="btn-secondary" title="Cetak Tabel Rekapitulasi">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                <rect x="6" y="14" width="12" height="8"></rect>
+              </svg>
+              <span>Cetak Rekap</span>
+            </button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:40px;">No</th>
+                  <th>Dosen Pengampu</th>
+                  <th>Mata Kuliah & Bobot SKS</th>
+                  <th style="text-align:center;">Total Sesi Hadir</th>
+                  <th style="text-align:center;">Akumulasi SKS</th>
+                  <th>Formula Perhitungan</th>
+                  <th style="text-align:right;">Total Honor (Rp)</th>
+                  <th style="text-align:center;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tabelRekapDosen"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Panel 2: Log Rincian Setiap Pertemuan -->
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Log Sesi Perkuliahan & Honor</h2>
+            <span id="badgeJumlahLog" class="badge ok" style="font-size:12px;">0 Sesi</span>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Dosen</th>
+                  <th>Mata Kuliah</th>
+                  <th style="text-align:center;">SKS</th>
+                  <th>Pertemuan</th>
+                  <th>Metode</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Honor Sesi</th>
+                </tr>
+              </thead>
+              <tbody id="tabelLogSesi"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer">
+      Politeknik IDN Bogor
+      <span>Portal Rekapitulasi Honor Mengajar Dosen Berbasis SKS</span>
+    </footer>
+  </div>
+
+  <!-- ==========================================
+       MODAL POPUP: SLIP GAJI DOSEN RESMI
+       ========================================== -->
+  <div id="slipModal" class="slip-modal-backdrop">
+    <div class="slip-modal-card">
+      <div class="slip-header-bar">
+        <h3>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+          Pratinjau Slip Honor Dosen
+        </h3>
+        <button type="button" id="btnCloseSlip" class="slip-close-btn" aria-label="Tutup Pratinjau">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="slip-body">
+        <!-- Dokumen Kertas Slip yang dapat dicetak -->
+        <div id="printableSlip" class="slip-paper">
+          <div class="slip-kop">
+            <h2>POLITEKNIK IDN BOGOR</h2>
+            <p>Jl. Raya Citra Indah, Sukamaju, Jonggol, Bogor, Jawa Barat</p>
+            <div class="slip-title">BUKTI PEMBAYARAN HONOR PERKULIAHAN</div>
+          </div>
+
+          <div class="slip-meta-grid">
+            <div class="slip-meta-row">
+              <span class="slip-meta-label">Nama Dosen</span>
+              <span class="slip-meta-val" id="slipDosen">-</span>
+            </div>
+            <div class="slip-meta-row">
+              <span class="slip-meta-label">Periode</span>
+              <span class="slip-meta-val" id="slipPeriode">-</span>
+            </div>
+            <div class="slip-meta-row">
+              <span class="slip-meta-label">Tarif SKS</span>
+              <span class="slip-meta-val">Rp 50.000 / SKS / Sesi</span>
+            </div>
+            <div class="slip-meta-row">
+              <span class="slip-meta-label">Tanggal Cetak</span>
+              <span class="slip-meta-val" id="slipTglCetak">-</span>
+            </div>
+          </div>
+
+          <table class="slip-table">
+            <thead>
+              <tr>
+                <th style="width:30px;" class="text-center">No</th>
+                <th>Mata Kuliah</th>
+                <th style="width:60px;" class="text-center">SKS</th>
+                <th style="width:70px;" class="text-center">Kehadiran</th>
+                <th style="width:85px;" class="text-center">Akum. SKS</th>
+                <th style="width:90px;" class="text-right">Tarif (Rp)</th>
+                <th style="width:110px;" class="text-right">Jumlah (Rp)</th>
+              </tr>
+            </thead>
+            <tbody id="slipTabelBody"></tbody>
+          </table>
+
+          <div class="slip-total-box">
+            <span class="total-label">TOTAL HONOR DITERIMA:</span>
+            <span class="total-amount" id="slipTotalAmount">Rp 0</span>
+          </div>
+
+          <div class="slip-sign-grid">
+            <div class="slip-sign-box">
+              <span>Mengetahui / Menyetujui,<br>Bagian Keuangan & Akademik</span>
+              <div class="slip-sign-line">( Bagian Keuangan )</div>
+            </div>
+            <div class="slip-sign-box">
+              <span>Bogor, <span id="slipTglSign">-</span><br>Dosen Penerima</span>
+              <div class="slip-sign-line" id="slipSignDosen">( Nama Dosen )</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="slip-actions">
+          <button type="button" id="btnBatalSlip" class="btn-secondary">Tutup</button>
+          <button type="button" id="btnPrintSlip" class="btn-primary-action">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            <span>Cetak Slip / Simpan PDF</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ====== THEME TOGGLE ======
+  const themeToggle = document.getElementById('themeToggle');
+  function updateToggleUI(theme) {
+    if (themeToggle) {
+      const isDark = theme === 'dark';
+      themeToggle.setAttribute('title', isDark ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap');
+    }
+  }
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+  updateToggleUI(currentTheme);
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      const active = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = active === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('theme', next); } catch(e){}
+      updateToggleUI(next);
+    });
+  }
+
+  // ====== KONFIGURASI SISTEM ======
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby8f0xPX9qMO8eJpaF6XTtzOz8XjCOPJdrGB1LAdzeWGlSAFfN3QJvJl5C8c5Yksfcz/exec';
+  const TARIF_PER_SKS = 50000; // Rp 50.000 / SKS per kehadiran
+
+  // Fallback map SKS berdasarkan sheet Matkul jika master belum reload
+  const FALLBACK_SKS = {
+    'RPL-250101': 3, 'RPL-250102': 3, 'RPL-250103': 3, 'RPL-250104': 3, 'RPL-250105': 4, 'RPL-250106': 4,
+    'RMG-250101': 3, 'RMG-250102': 3, 'RMG-250103': 3, 'RMG-250104': 4, 'RMG-250105': 4, 'RMG-250106': 3,
+    'RKJ-250101': 3, 'RKJ-250102': 3, 'RKJ-250103': 3, 'RKJ-250104': 4, 'RKJ-250105': 4, 'RKJ-250106': 3
+  };
+
+  // State Aplikasi
+  let masterData = { matkul: [], dosen: [], passwords: [] };
+  let rawAbsensi = [];
+  let mapSksMatkul = { ...FALLBACK_SKS };
+  let daftarPasswordSah = ['adminidn2026', 'absensidosenpidnb2026']; // Default fallback jika offline
+
+  // Helper Sanitasi & Format
+  function esc(teks) {
+    const div = document.createElement('div');
+    div.textContent = teks ?? '';
+    return div.innerHTML;
+  }
+
+  function rupiah(angka) {
+    return 'Rp ' + Number(angka || 0).toLocaleString('id-ID');
+  }
+
+  function formatBulanTahun(tglStr) {
+    if (!tglStr) return '';
+    const d = new Date(tglStr);
+    if (isNaN(d.getTime())) return '';
+    const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    return bulan[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  function formatTanggalSingkat(raw) {
+    if (!raw) return '-';
+    if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.trim())) {
+      const [y, m, d] = raw.trim().split('-');
+      const bln = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      return parseInt(d, 10) + ' ' + bln[parseInt(m, 10) - 1] + ' ' + y;
+    }
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return esc(raw);
+    const bln = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    return d.getDate() + ' ' + bln[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  // ====== SINKRONISASI MASTER DATA LANGSUNG SAAT HALAMAN DIBUKA ======
+  let masterFetchPromise = null;
+
+  async function ambilMasterData() {
+    try {
+      const res = await fetch(SCRIPT_URL + '?action=master');
+      const json = await res.json();
+      if (json && json.status === 'ok') {
+        masterData = json;
+
+        // Ambil daftar password dari Kolom J yang dikirimkan Apps Script
+        const sandiServer = [];
+        if (json.passwords && Array.isArray(json.passwords)) {
+          sandiServer.push(...json.passwords);
+        }
+        if (json.password) {
+          sandiServer.push(json.password);
+        }
+        if (json.dosenPasswords && typeof json.dosenPasswords === 'object') {
+          sandiServer.push(...Object.values(json.dosenPasswords));
+        }
+
+        if (sandiServer.length > 0) {
+          daftarPasswordSah = [...new Set([...sandiServer, ...daftarPasswordSah])];
+        }
+
+        // Petakan SKS per Kode Matkul & Nama Matkul
+        if (json.matkul && Array.isArray(json.matkul)) {
+          json.matkul.forEach(m => {
+            const sksVal = parseInt(m.sks, 10);
+            if (sksVal > 0) {
+              if (m.kode) mapSksMatkul[m.kode] = sksVal;
+              if (m.nama) mapSksMatkul[m.nama] = sksVal;
+            }
+          });
+        }
+        return true;
+      }
+    } catch(err) {
+      console.warn('Gagal sinkron master data dari Apps Script:', err);
+    }
+    return false;
+  }
+
+  // Panggil SECEPAT MUNGKIN saat halaman pertama kali dimuat
+  masterFetchPromise = ambilMasterData();
+
+  // ====== AUTENTIKASI KATA SANDI (KOLOM J) ======
+  const lockScreen = document.getElementById('lockScreen');
+  const portalContent = document.getElementById('portalContent');
+  const formAuth = document.getElementById('formAuth');
+  const inputPass = document.getElementById('inputPass');
+  const togglePass = document.getElementById('togglePass');
+  const lockAlert = document.getElementById('lockAlert');
+  const btnLogout = document.getElementById('btnLogout');
+  const btnUnlock = document.getElementById('btnUnlock');
+
+  // Toggle Visibility Password
+  if (togglePass) {
+    togglePass.addEventListener('click', () => {
+      const type = inputPass.getAttribute('type') === 'password' ? 'text' : 'password';
+      inputPass.setAttribute('type', type);
+      document.getElementById('eyeIcon').innerHTML = type === 'password' ?
+        '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>' :
+        '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+    });
+  }
+
+  function cekSesiLogin() {
+    try {
+      const auth = sessionStorage.getItem('portal_honor_auth');
+      if (auth === 'true') {
+        bukaPortal();
+      }
+    } catch(e) {}
+  }
+
+  function bukaPortal() {
+    lockScreen.style.display = 'none';
+    portalContent.style.display = 'block';
+    if (btnLogout) btnLogout.style.display = 'inline-flex';
+    muatDataPortal();
+  }
+
+  function kunciPortal() {
+    try {
+      sessionStorage.removeItem('portal_honor_auth');
+    } catch(e) {}
+    portalContent.style.display = 'none';
+    lockScreen.style.display = 'flex';
+    if (btnLogout) btnLogout.style.display = 'none';
+    inputPass.value = '';
+    lockAlert.className = 'lock-alert';
+    lockAlert.textContent = '';
+  }
+
+  if (btnLogout) {
+    btnLogout.addEventListener('click', kunciPortal);
+  }
+
+  formAuth.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pass = inputPass.value.trim();
+    if (!pass) return;
+
+    const originalBtnText = btnUnlock.innerHTML;
+    btnUnlock.disabled = true;
+    btnUnlock.innerHTML = '<span>Memverifikasi kata sandi...</span>';
+    lockAlert.className = 'lock-alert';
+    lockAlert.textContent = '';
+
+    // Pastikan master data dari spreadsheet sudah selesai di-fetch
+    if (masterFetchPromise) {
+      await masterFetchPromise;
+    } else {
+      await ambilMasterData();
+    }
+
+    // Cocokkan kata sandi secara eksak maupun case-insensitive
+    const cocok = daftarPasswordSah.some(p => {
+      const strP = String(p).trim();
+      return strP === pass || strP.toLowerCase() === pass.toLowerCase();
+    });
+
+    btnUnlock.disabled = false;
+    btnUnlock.innerHTML = originalBtnText;
+
+    if (cocok) {
+      try {
+        sessionStorage.setItem('portal_honor_auth', 'true');
+      } catch(e) {}
+      bukaPortal();
+    } else {
+      lockAlert.className = 'lock-alert err';
+      lockAlert.innerHTML = '<strong>Kata sandi tidak sesuai.</strong><br>' +
+        'Silakan periksa kata sandi di Kolom J Sheet Matkul. Jika baru ditambahkan/diubah di Spreadsheet, pastikan file Apps Script sudah di-<strong>Deploy > Manage deployments > New version</strong>.';
+      inputPass.focus();
+    }
+  });
+
+  // ====== SINKRONISASI DATA KEHADIRAN SETELAH LOGIN ======
+  async function muatDataPortal() {
+    document.getElementById('loadingPesan').style.display = 'block';
+    document.getElementById('dataContent').style.display = 'none';
+
+    try {
+      // Ambil Riwayat Kehadiran
+      const resData = await fetch(SCRIPT_URL + '?action=data');
+      const jsonData = await resData.json();
+      if (jsonData.status !== 'ok') throw new Error(jsonData.message || 'Gagal memuat absensi');
+
+      rawAbsensi = jsonData.data || [];
+
+      inisialisasiFilter();
+      document.getElementById('loadingPesan').style.display = 'none';
+      document.getElementById('dataContent').style.display = 'block';
+      renderGaji();
+    } catch(err) {
+      document.getElementById('loadingPesan').innerHTML = 
+        '<div style="color:var(--error);font-weight:600;margin-bottom:6px;">Gagal memuat data honor.</div>' +
+        '<div style="font-size:12px;color:var(--text-secondary);">' + esc(err.message) + '</div>';
+    }
+  }
+
+  // Cari SKS suatu matkul
+  function getSks(matkulKode, matkulNama) {
+    if (matkulKode && mapSksMatkul[matkulKode]) return mapSksMatkul[matkulKode];
+    if (matkulNama && mapSksMatkul[matkulNama]) return mapSksMatkul[matkulNama];
+    // Deteksi jika ada angka SKS di fallback
+    for (const k in mapSksMatkul) {
+      if (matkulNama && matkulNama.toLowerCase().includes(k.toLowerCase())) {
+        return mapSksMatkul[k];
+      }
+    }
+    return 3; // Default standar perguruan tinggi jika tidak tercantum
+  }
+
+  // Inisialisasi Filter Periode & Dosen
+  const filterBulan = document.getElementById('filterBulan');
+  const filterDosen = document.getElementById('filterDosen');
+  const filterStatus = document.getElementById('filterStatus');
+
+  function inisialisasiFilter() {
+    // Kumpulkan Bulan-Tahun Unik dari tanggal absensi
+    const bulanSet = new Set();
+    rawAbsensi.forEach(d => {
+      const bt = formatBulanTahun(d.tanggal);
+      if (bt) bulanSet.add(bt);
+    });
+
+    // Urutkan dan masukkan ke dropdown
+    filterBulan.innerHTML = '<option value="">Semua Periode</option>' +
+      [...bulanSet].map(b => `<option value="${b}">${b}</option>`).join('');
+
+    // Set default ke bulan berjalan jika tersedia
+    const bulanIni = formatBulanTahun(new Date().toISOString());
+    if (bulanSet.has(bulanIni)) {
+      filterBulan.value = bulanIni;
+    }
+
+    // Kumpulkan Dosen Unik
+    const dosenSet = new Set(rawAbsensi.map(d => (d.dosen || '').trim()).filter(Boolean));
+    if (masterData.dosen) {
+      masterData.dosen.forEach(d => dosenSet.add(d.trim()));
+    }
+
+    filterDosen.innerHTML = '<option value="">Semua Dosen</option>' +
+      [...dosenSet].sort().map(d => `<option value="${d}">${d}</option>`).join('');
+  }
+
+  [filterBulan, filterDosen, filterStatus].forEach(el => {
+    el.addEventListener('change', renderGaji);
+  });
+
+  // ====== KALKULASI & RENDER GAJI ======
+  let rekapDosenTerhitung = [];
+
+  function renderGaji() {
+    const pBulan = filterBulan.value;
+    const pDosen = filterDosen.value;
+    const pStatus = filterStatus.value;
+
+    // Filter Sesi Kehadiran
+    const sesiTersaring = rawAbsensi.filter(d => {
+      const cocokBulan = !pBulan || formatBulanTahun(d.tanggal) === pBulan;
+      const cocokDosen = !pDosen || (d.dosen || '').trim() === pDosen;
+      const cocokStatus = pStatus === 'Semua' ? true : (d.statusKehadiran || '').toLowerCase() === 'hadir';
+      return cocokBulan && cocokDosen && cocokStatus;
+    });
+
+    // 1. Grouping per Dosen
+    const perDosen = {};
+
+    sesiTersaring.forEach(sesi => {
+      const dosen = (sesi.dosen || 'Tanpa Nama').trim();
+      const kode = sesi.kodeMatkul || '-';
+      const namaMk = sesi.mataKuliah || '-';
+      const keyMk = kode !== '-' ? kode : namaMk;
+      const sks = getSks(kode, namaMk);
+
+      if (!perDosen[dosen]) {
+        perDosen[dosen] = {
+          dosen: dosen,
+          matkulMap: {},
+          totalSesi: 0,
+          totalSksAkumulasi: 0,
+          totalHonor: 0
+        };
+      }
+
+      if (!perDosen[dosen].matkulMap[keyMk]) {
+        perDosen[dosen].matkulMap[keyMk] = {
+          kode: kode,
+          nama: namaMk,
+          sks: sks,
+          jumlahSesi: 0,
+          totalSksMatkul: 0,
+          honorMatkul: 0
+        };
+      }
+
+      perDosen[dosen].matkulMap[keyMk].jumlahSesi += 1;
+      perDosen[dosen].matkulMap[keyMk].totalSksMatkul += sks;
+      perDosen[dosen].matkulMap[keyMk].honorMatkul += (sks * TARIF_PER_SKS);
+
+      perDosen[dosen].totalSesi += 1;
+      perDosen[dosen].totalSksAkumulasi += sks;
+      perDosen[dosen].totalHonor += (sks * TARIF_PER_SKS);
+    });
+
+    rekapDosenTerhitung = Object.values(perDosen);
+
+    // 2. Hitung KPI Keseluruhan
+    const totalSemuaHonor = rekapDosenTerhitung.reduce((acc, d) => acc + d.totalHonor, 0);
+    const totalSemuaSks = rekapDosenTerhitung.reduce((acc, d) => acc + d.totalSksAkumulasi, 0);
+    const totalSemuaSesi = sesiTersaring.length;
+
+    document.getElementById('kpiTotalGaji').textContent = rupiah(totalSemuaHonor);
+    document.getElementById('kpiTotalSks').textContent = totalSemuaSks + ' SKS';
+    document.getElementById('kpiTotalSesi').textContent = totalSemuaSesi + ' Sesi';
+
+    // 3. Render Tabel Rekapitulasi per Dosen
+    const tbodyDosen = document.getElementById('tabelRekapDosen');
+    if (rekapDosenTerhitung.length === 0) {
+      tbodyDosen.innerHTML = '<tr><td colspan="8" class="pesan" style="border:none;">Tidak ada catatan kehadiran pada filter periode ini.</td></tr>';
+    } else {
+      tbodyDosen.innerHTML = rekapDosenTerhitung.map((d, idx) => {
+        const matkulBadges = Object.values(d.matkulMap).map(m => {
+          return `<div style="margin-bottom:3px;font-size:12px;">
+            <strong>${esc(m.nama)}</strong> 
+            <span class="badge semester" style="font-size:10.5px;padding:2px 6px;">${m.sks} SKS</span>
+            <span style="color:var(--text-muted);font-size:11px;">(${m.jumlahSesi}x hadir)</span>
+          </div>`;
+        }).join('');
+
+        return `<tr>
+          <td style="color:var(--text-muted);">${idx + 1}</td>
+          <td><strong>${esc(d.dosen)}</strong></td>
+          <td>${matkulBadges}</td>
+          <td style="text-align:center;">
+            <span class="badge ok">${d.totalSesi} Sesi</span>
+          </td>
+          <td style="text-align:center;">
+            <strong>${d.totalSksAkumulasi}</strong> SKS
+          </td>
+          <td>
+            <code style="font-size:11.5px;background:var(--surface-subtle);padding:3px 6px;border-radius:4px;border:1px solid var(--border);">
+              ${d.totalSksAkumulasi} SKS × Rp 50.000
+            </code>
+          </td>
+          <td style="text-align:right;">
+            <span style="font-size:14px;font-weight:700;color:var(--accent);">${rupiah(d.totalHonor)}</span>
+          </td>
+          <td style="text-align:center;">
+            <button type="button" class="btn-secondary" style="height:32px;padding:0 10px;font-size:11.5px;" onclick="bukaModalSlip('${esc(d.dosen)}')">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              <span>Slip Gaji</span>
+            </button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    // 4. Render Log Sesi Perkuliahan
+    document.getElementById('badgeJumlahLog').textContent = sesiTersaring.length + ' Sesi';
+    const tbodyLog = document.getElementById('tabelLogSesi');
+    const logUrut = [...sesiTersaring].sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+
+    if (logUrut.length === 0) {
+      tbodyLog.innerHTML = '<tr><td colspan="8" class="pesan" style="border:none;">Tidak ada riwayat pertemuan.</td></tr>';
+    } else {
+      tbodyLog.innerHTML = logUrut.slice(0, 30).map(s => {
+        const sks = getSks(s.kodeMatkul, s.mataKuliah);
+        const honorSesi = sks * TARIF_PER_SKS;
+        return `<tr>
+          <td>${formatTanggalSingkat(s.tanggal)}</td>
+          <td><strong>${esc(s.dosen)}</strong></td>
+          <td>
+            <div>${esc(s.mataKuliah || '-')}</div>
+            ${s.kodeMatkul ? `<div class="sub-kode">${esc(s.kodeMatkul)}</div>` : ''}
+          </td>
+          <td style="text-align:center;">
+            <span class="badge semester">${sks} SKS</span>
+          </td>
+          <td>Pertemuan ${esc(s.pertemuan || '-')}</td>
+          <td>${esc(s.metode || '-')}</td>
+          <td><span class="badge ok">${esc(s.statusKehadiran || 'Hadir')}</span></td>
+          <td style="text-align:right;font-weight:700;color:var(--text-primary);">${rupiah(honorSesi)}</td>
+        </tr>`;
+      }).join('');
+    }
+  }
+
+  // ====== MODAL SLIP GAJI & CETAK ======
+  const slipModal = document.getElementById('slipModal');
+  const btnCloseSlip = document.getElementById('btnCloseSlip');
+  const btnBatalSlip = document.getElementById('btnBatalSlip');
+  const btnPrintSlip = document.getElementById('btnPrintSlip');
+  const btnCetakRekap = document.getElementById('btnCetakRekap');
+
+  function tutupModalSlip() {
+    slipModal.classList.remove('active');
+  }
+
+  if (btnCloseSlip) btnCloseSlip.addEventListener('click', tutupModalSlip);
+  if (btnBatalSlip) btnBatalSlip.addEventListener('click', tutupModalSlip);
+
+  slipModal.addEventListener('click', (e) => {
+    if (e.target === slipModal) tutupModalSlip();
+  });
+
+  if (btnPrintSlip) {
+    btnPrintSlip.addEventListener('click', () => {
+      window.print();
+    });
+  }
+
+  if (btnCetakRekap) {
+    btnCetakRekap.addEventListener('click', () => {
+      window.print();
+    });
+  }
+
+  window.bukaModalSlip = function(namaDosen) {
+    const dataDosen = rekapDosenTerhitung.find(d => d.dosen === namaDosen);
+    if (!dataDosen) return;
+
+    const periodeAktif = filterBulan.value || 'Semua Periode Tercatat';
+    const tglHariIni = formatTanggalSingkat(new Date().toISOString());
+
+    document.getElementById('slipDosen').textContent = dataDosen.dosen;
+    document.getElementById('slipPeriode').textContent = periodeAktif;
+    document.getElementById('slipTglCetak').textContent = tglHariIni;
+    document.getElementById('slipTglSign').textContent = tglHariIni;
+    document.getElementById('slipSignDosen').textContent = '( ' + dataDosen.dosen + ' )';
+    document.getElementById('slipTotalAmount').textContent = rupiah(dataDosen.totalHonor);
+
+    const matkulList = Object.values(dataDosen.matkulMap);
+    document.getElementById('slipTabelBody').innerHTML = matkulList.map((m, i) => {
+      return `<tr>
+        <td class="text-center">${i + 1}</td>
+        <td><strong>${esc(m.nama)}</strong> (${esc(m.kode || '-')})</td>
+        <td class="text-center">${m.sks}</td>
+        <td class="text-center">${m.jumlahSesi} kali</td>
+        <td class="text-center"><strong>${m.totalSksMatkul}</strong></td>
+        <td class="text-right">Rp 50.000</td>
+        <td class="text-right"><strong>${rupiah(m.honorMatkul)}</strong></td>
+      </tr>`;
+    }).join('');
+
+    slipModal.classList.add('active');
+  };
+
+  // Mulai periksa autentikasi saat file dibuka
+  cekSesiLogin();
+</script>
+</body>
+</html>
