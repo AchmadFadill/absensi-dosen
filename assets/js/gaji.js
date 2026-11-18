@@ -297,6 +297,13 @@ function renderGaji() {
   const pDosen = filterDosen ? filterDosen.value : '';
   const pStatus = filterStatus ? filterStatus.value : 'Hadir';
 
+  const wrapBulan = filterBulan ? filterBulan.closest('.filter-dropdown-wrap') : null;
+  const wrapDosen = filterDosen ? filterDosen.closest('.filter-dropdown-wrap') : null;
+  const wrapStatus = filterStatus ? filterStatus.closest('.filter-dropdown-wrap') : null;
+  if (wrapBulan) wrapBulan.classList.toggle('has-filter', Boolean(pBulan));
+  if (wrapDosen) wrapDosen.classList.toggle('has-filter', Boolean(pDosen));
+  if (wrapStatus) wrapStatus.classList.toggle('has-filter', pStatus !== 'Hadir');
+
   // Filter Sesi Kehadiran
   const sesiTersaring = rawAbsensi.filter(d => {
     const cocokBulan = !pBulan || formatBulanTahun(d.tanggal) === pBulan;
