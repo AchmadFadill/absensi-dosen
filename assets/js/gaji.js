@@ -315,11 +315,25 @@ function renderGaji() {
     const keyMk = kode !== '-' ? kode : namaMk;
     const sks = getSks(kode, namaMk);
 
+    const semVal = (sesi.semester && sesi.semester !== '-') 
+      ? String(sesi.semester).trim() 
+      : (function() {
+          if (masterData && masterData.matkul) {
+            const found = masterData.matkul.find(m => 
+              (m.kode && m.kode === kode) || 
+              (m.nama && namaMk && m.nama.toLowerCase() === namaMk.toLowerCase())
+            );
+            if (found && found.semester) return String(found.semester).trim();
+          }
+          return '';
+        })();
+
     const transportSesi = Number(sesi.nominalTransport || sesi.biayaTransport || 0) || 0;
 
     if (!perDosen[dosen]) {
       perDosen[dosen] = {
         dosen: dosen,
+        semesterSet: new Set(),
         matkulMap: {},
         totalSesi: 0,
         totalSksAkumulasi: 0,
@@ -329,11 +343,16 @@ function renderGaji() {
       };
     }
 
+    if (semVal) {
+      perDosen[dosen].semesterSet.add(semVal);
+    }
+
     if (!perDosen[dosen].matkulMap[keyMk]) {
       perDosen[dosen].matkulMap[keyMk] = {
         kode: kode,
         nama: namaMk,
         sks: sks,
+        semester: semVal,
         jumlahSesi: 0,
         totalSksMatkul: 0,
         honorMatkul: 0
@@ -377,7 +396,7 @@ function renderGaji() {
   const tbodyDosen = document.getElementById('tabelRekapDosen');
   if (tbodyDosen) {
     if (rekapDosenTerhitung.length === 0) {
-      tbodyDosen.innerHTML = '<tr><td colspan="8" class="pesan" style="border:none;">Tidak ada catatan kehadiran pada filter periode ini.</td></tr>';
+      tbodyDosen.innerHTML = '<tr><td colspan="9" class="pesan" style="border:none;">Tidak ada catatan kehadiran pada filter periode ini.</td></tr>';
     } else {
       tbodyDosen.innerHTML = rekapDosenTerhitung.map((d, idx) => {
         const matkulBadges = Object.values(d.matkulMap).map(m => {
@@ -392,9 +411,21 @@ function renderGaji() {
           ? `<div style="font-size:11px;color:#0284c7;font-weight:600;margin-top:3px;">+ Transport: ${rupiah(d.totalTransport)}</div>`
           : '';
 
+        const listSem = [...d.semesterSet].sort((a, b) => {
+          const numA = parseInt(a, 10);
+          const numB = parseInt(b, 10);
+          if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+          return a.localeCompare(b);
+        });
+
+        const semesterBadgeHtml = listSem.length > 0
+          ? listSem.map(s => `<span class="badge semester">Sem ${esc(s)}</span>`).join(' ')
+          : '<span style="color:var(--text-muted);">-</span>';
+
         return `<tr>
           <td style="color:var(--text-muted);">${idx + 1}</td>
           <td><strong>${esc(d.dosen)}</strong></td>
+          <td style="text-align:center;">${semesterBadgeHtml}</td>
           <td>${matkulBadges}</td>
           <td style="text-align:center;">
             <span class="badge ok">${d.totalSesi} Sesi</span>
