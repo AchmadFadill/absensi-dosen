@@ -285,6 +285,7 @@
                 <th style="text-align:center;">Bukti Kelas</th>
                 <th>Kehadiran</th>
                 <th>Verifikasi</th>
+                <th style="text-align:center;">Aksi</th>
               </tr>
             </thead>
             <tbody id="tabelBody"></tbody>
@@ -374,6 +375,150 @@
           <div class="modal-actions-row">
             <button type="button" id="btnCancelAdminAuth" class="btn-secondary">Batal</button>
             <button type="submit" id="btnSubmitAdminAuth" class="btn-primary-action">Masuk Admin</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Edit Absensi Dosen (Opsi A) -->
+  <div id="modalEditAbsensi" class="slip-modal-backdrop">
+    <div class="slip-modal-card slip-modal-lg">
+      <div class="slip-header-bar">
+        <h3>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+          Edit Data Absensi Perkuliahan
+        </h3>
+        <button type="button" id="btnCloseEditModal" class="slip-close-btn" aria-label="Tutup Dialog">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="edit-modal-scroll" style="padding: 24px; max-height: calc(85vh - 70px); overflow-y: auto;">
+        <!-- Rejection Alert Banner (Ditampilkan jika status Ditolak) -->
+        <div id="editAlertRejection" class="edit-rejection-banner" style="display:none;">
+          <div class="banner-icon">⚠️</div>
+          <div class="banner-body">
+            <strong>Catatan Penolakan dari Admin:</strong>
+            <p id="editRejectionNoteText" style="margin:0;"></p>
+          </div>
+        </div>
+
+        <form id="formEditAbsensi">
+          <input type="hidden" id="editItemNo">
+          <input type="hidden" id="editItemKodeMatkul">
+          <input type="hidden" id="editItemPertemuan">
+
+          <!-- Read-only Header Information -->
+          <div class="edit-info-cards-grid">
+            <div class="edit-info-item">
+              <span class="label">Dosen Pengampu</span>
+              <span class="val" id="editDosenNama">-</span>
+            </div>
+            <div class="edit-info-item">
+              <span class="label">Mata Kuliah</span>
+              <span class="val" id="editMatkulNama">-</span>
+            </div>
+            <div class="edit-info-item">
+              <span class="label">Pertemuan</span>
+              <span class="val" id="editPertemuanKe">-</span>
+            </div>
+            <div class="edit-info-item">
+              <span class="label">Semester</span>
+              <span class="val" id="editSemesterVal">-</span>
+            </div>
+          </div>
+
+          <!-- Grid Input Fields -->
+          <div class="edit-fields-grid">
+            <div class="field">
+              <label for="editTanggal">Tanggal Perkuliahan <span>*</span></label>
+              <input type="date" id="editTanggal" required>
+            </div>
+
+            <div class="field">
+              <label for="editStatusKehadiran">Status Kehadiran <span>*</span></label>
+              <select id="editStatusKehadiran" required>
+                <option value="Hadir">Hadir</option>
+                <option value="Terlambat">Terlambat</option>
+                <option value="Izin">Izin</option>
+                <option value="Sakit">Sakit</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="editMetode">Metode Perkuliahan <span>*</span></label>
+              <select id="editMetode" required>
+                <option value="Offline">Offline</option>
+                <option value="Online">Online</option>
+                <option value="Hybrid">Hybrid</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="editLokasi">Lokasi / Ruang Kelas <span>*</span></label>
+              <input type="text" id="editLokasi" required placeholder="Contoh: Citra Indah / Lab Komputer">
+            </div>
+          </div>
+
+          <div class="field" style="margin-top: 14px;">
+            <label for="editMateri">Materi Perkuliahan / Link Materi <span>*</span></label>
+            <textarea id="editMateri" rows="2" required placeholder="Tuliskan materi atau tautan Google Drive / Slide" style="width:100%; border-radius:var(--radius-md); border:1.5px solid var(--border); padding:10px 14px; font-family:inherit; font-size:14px; background:var(--surface); color:var(--text-primary); resize:vertical;"></textarea>
+          </div>
+
+          <!-- Section: Foto Bukti Perkuliahan -->
+          <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
+            <label style="font-weight: 600; font-size: 14px; margin-bottom: 8px;">Bukti Foto Kegiatan Kelas</label>
+            <div id="editCurrentBuktiWrap" style="margin-bottom: 10px; display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 13px; color: var(--text-secondary);">Foto saat ini:</span>
+              <a id="editCurrentBuktiLink" href="#" target="_blank" class="link-materi-btn" style="text-decoration:none;">Lihat Foto Tersimpan</a>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Pilih file baru jika ingin mengganti foto bukti:</div>
+            <input type="file" id="editFileBukti" accept="image/*" style="font-size: 13px;">
+            <div id="editFileBuktiPreview" style="display:none; margin-top:8px;">
+              <img id="editFileBuktiThumb" style="max-height: 120px; border-radius: 6px; border: 1px solid var(--border);" alt="Preview baru">
+            </div>
+          </div>
+
+          <!-- Section: Struk Transportasi -->
+          <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
+            <label style="font-weight: 600; font-size: 14px; margin-bottom: 8px;">Klaim Struk Transportasi</label>
+            <div class="edit-fields-grid">
+              <div class="field">
+                <label for="editAdaTransport">Ada Klaim Transport?</label>
+                <select id="editAdaTransport">
+                  <option value="tidak">Tidak</option>
+                  <option value="ya">Ya</option>
+                </select>
+              </div>
+              <div class="field" id="wrapEditNominalTransport" style="display:none;">
+                <label for="editNominalTransport">Nominal Biaya (Rp)</label>
+                <input type="number" id="editNominalTransport" min="0" step="1000" placeholder="Contoh: 50000">
+              </div>
+            </div>
+            <div id="wrapEditFileTransport" style="display:none; margin-top: 10px;">
+              <div id="editCurrentStrukWrap" style="margin-bottom: 8px; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 13px; color: var(--text-secondary);">Struk saat ini:</span>
+                <a id="editCurrentStrukLink" href="#" target="_blank" class="link-materi-btn" style="text-decoration:none;">Lihat Struk</a>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Pilih file baru jika ingin mengganti struk (JPG/PNG/PDF):</div>
+              <input type="file" id="editFileTransport" accept="image/*,application/pdf" style="font-size: 13px;">
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; border-top: 1px solid var(--border); padding-top: 16px;">
+            <button type="button" id="btnCancelEdit" class="btn-secondary">Batal</button>
+            <button type="submit" id="btnSubmitEdit" class="btn-primary-action">
+              <span id="btnSubmitEditText">Simpan Perubahan</span>
+              <div id="editSpinner" class="pesan-spinner" style="display:none; width:16px; height:16px; border-width:2px; margin-left:6px;"></div>
+            </button>
           </div>
         </form>
       </div>

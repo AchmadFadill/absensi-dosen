@@ -618,11 +618,15 @@ function renderGaji() {
       tbodyLog.innerHTML = pageLog.map(s => {
         const sks = getSks(s.kodeMatkul, s.mataKuliah);
         const honorSesi = sks * TARIF_PER_SKS;
-        const isVerif = (s.statusVerifikasi || '').toLowerCase().includes('terverifikasi');
+        const statusVerifLower = (s.statusVerifikasi || '').toLowerCase();
+        const isVerif = statusVerifLower.includes('terverifikasi');
+        const isDitolak = statusVerifLower.includes('ditolak');
 
         const statusBadgeHtml = isVerif
           ? `<span class="badge ok" title="Sudah diverifikasi oleh Admin">✓ Terverifikasi</span>`
-          : `<span class="badge warn" title="Menunggu verifikasi Admin">Menunggu Verifikasi</span>`;
+          : (isDitolak
+              ? `<span class="badge err" title="Absensi Ditolak oleh Admin">✕ Ditolak</span>`
+              : `<span class="badge warn" title="Menunggu verifikasi Admin">Menunggu Verifikasi</span>`);
 
         const honorTextHtml = isVerif
           ? `<span style="font-weight:700;color:var(--text-primary);">${rupiah(honorSesi)}</span>`

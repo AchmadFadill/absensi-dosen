@@ -2199,15 +2199,41 @@ button[type="submit"]:disabled::before {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  height: 95px;
+  height: 115px;
+  position: relative;
+}
+
+.slip-sign-img-wrap {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  margin-bottom: -8px;
+  z-index: 1;
+}
+
+.slip-signature-img {
+  max-height: 52px;
+  max-width: 140px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  pointer-events: none;
 }
 
 .slip-sign-line {
   font-weight: 700;
   color: #0F172A;
   border-top: 1px solid #94A3B8;
-  width: 150px;
-  padding-top: 4px;
+  width: fit-content;
+  min-width: 210px;
+  max-width: 100%;
+  padding: 4px 6px 0;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .slip-actions {
@@ -2703,17 +2729,43 @@ button[type="submit"]:disabled::before {
     flex-direction: column !important;
     align-items: center !important;
     justify-content: space-between !important;
-    height: 90px !important;
+    height: 105px !important;
     font-size: 11px !important;
     text-align: center !important;
+    position: relative !important;
+  }
+
+  .slip-sign-img-wrap {
+    height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-top: 2px !important;
+    margin-bottom: -8px !important;
+  }
+
+  .slip-signature-img {
+    max-height: 48px !important;
+    max-width: 135px !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    display: block !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .slip-sign-line {
     border-top: 1px solid #0F172A !important;
-    width: 170px !important;
-    padding-top: 4px !important;
+    width: fit-content !important;
+    min-width: 220px !important;
+    max-width: 100% !important;
+    padding: 4px 6px 0 !important;
     font-weight: 700 !important;
     color: #0F172A !important;
+    white-space: nowrap !important;
+    font-size: 11px !important;
+    text-align: center !important;
   }
 
   /* ====== KASUS 2: CETAK REKAPITULASI (TABEL UTAMA - A4 LANDSCAPE) ====== */
@@ -2889,18 +2941,202 @@ button[type="submit"]:disabled::before {
     flex-direction: column !important;
     align-items: center !important;
     justify-content: space-between !important;
-    height: 90px !important;
+    height: 105px !important;
     font-size: 11px !important;
     text-align: center !important;
     color: #0F172A !important;
     line-height: 1.4 !important;
+    position: relative !important;
+  }
+
+  body.is-printing-rekap .print-sign-box .slip-sign-img-wrap {
+    height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-top: 2px !important;
+    margin-bottom: -8px !important;
+  }
+
+  body.is-printing-rekap .print-sign-box .slip-signature-img {
+    max-height: 48px !important;
+    max-width: 135px !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    display: block !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   body.is-printing-rekap .print-sign-line {
     border-top: 1px solid #0F172A !important;
-    width: 210px !important;
-    padding-top: 4px !important;
+    width: fit-content !important;
+    min-width: 220px !important;
+    max-width: 100% !important;
+    padding: 4px 6px 0 !important;
     font-weight: 700 !important;
     color: #0F172A !important;
+    white-space: nowrap !important;
+    font-size: 11px !important;
+    text-align: center !important;
   }
 }
+
+/* ====== EDIT ABSENSI & VERIFIKASI DENGAN CATATAN PENOLAKAN ====== */
+.admin-verif-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-tolak-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #e11d48;
+  background: rgba(225, 29, 72, 0.08);
+  border: 1px solid rgba(225, 29, 72, 0.3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.btn-tolak-action:hover {
+  background: #e11d48;
+  color: #fff;
+}
+
+.btn-catatan-tag,
+.btn-lihat-catatan {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #e11d48;
+  background: rgba(225, 29, 72, 0.08);
+  border: 1px solid rgba(225, 29, 72, 0.25);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  margin-top: 4px;
+  transition: all var(--transition-fast);
+}
+
+.btn-catatan-tag:hover,
+.btn-lihat-catatan:hover {
+  background: rgba(225, 29, 72, 0.18);
+  color: #be123c;
+}
+
+.btn-edit-absensi {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(10, 98, 232, 0.08);
+  border: 1px solid rgba(10, 98, 232, 0.25);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.btn-edit-absensi:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-edit-absensi.disabled,
+.btn-edit-absensi:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: var(--surface-subtle);
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+.edit-rejection-banner {
+  background: rgba(225, 29, 72, 0.08);
+  border: 1.5px solid rgba(225, 29, 72, 0.35);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.edit-rejection-banner .banner-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.edit-rejection-banner .banner-body {
+  font-size: 13.5px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.edit-rejection-banner .banner-body strong {
+  color: #e11d48;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.edit-info-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+  background: var(--surface-subtle);
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.edit-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.edit-info-item .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.edit-info-item .val {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.edit-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 640px) {
+  .edit-fields-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

@@ -15,6 +15,7 @@ let chartMatkul = null;
 let isAdminLoggedIn = false;
 let savedAdminPin = '';
 let daftarPasswordSah = ['adminidn2026', 'absensidosenpidnb2026'];
+let dosenPasswordsMap = {};
 let masterFetchPromise = null;
 
 // Fallback map SKS berdasarkan sheet Matkul (tanpa ubah sheet Absensi)
@@ -115,6 +116,7 @@ async function ambilMasterPasswords() {
         sandiServer.push(mJson.password);
       }
       if (mJson.dosenPasswords && typeof mJson.dosenPasswords === 'object') {
+        dosenPasswordsMap = { ...mJson.dosenPasswords };
         sandiServer.push(...Object.values(mJson.dosenPasswords));
       }
       if (sandiServer.length > 0) {
@@ -484,7 +486,7 @@ function render() {
     const pageData = sortedData.slice(startIndex, endIndex);
 
     if (totalData === 0) {
-      elTabelBody.innerHTML = '<tr><td colspan="12" class="pesan" style="border:none;box-shadow:none;">Belum ada data absensi</td></tr>';
+      elTabelBody.innerHTML = '<tr><td colspan="13" class="pesan" style="border:none;box-shadow:none;">Belum ada data absensi</td></tr>';
       if (elPagination) elPagination.style.display = 'none';
     } else {
       elTabelBody.innerHTML = pageData.map(d => {
@@ -521,25 +523,56 @@ function render() {
         }
 
         const sksNilai = getSks(d.kodeMatkul, d.mataKuliah);
-        const isVerif = (d.statusVerifikasi || '').toLowerCase().includes('terverifikasi');
+        const statusVerifLower = (d.statusVerifikasi || '').toLowerCase();
+        const isVerif = statusVerifLower.includes('terverifikasi');
+        const isDitolak = statusVerifLower.includes('ditolak');
         const isProses = d.statusVerifikasi === 'Memproses...';
+        const catatan = (d.catatanPenolakan || d.catatan || d.catatanAdmin || '').trim();
 
+        // 1. Kolom Verifikasi
         let verifBtnHtml = '';
         if (!isAdminLoggedIn) {
-          // Mode Publik / Dosen: Read-only badge (Dosen TIDAK BISA klik/verifikasi sendiri)
+          // Mode Publik / Dosen: Read-only badge
           if (isVerif) {
             verifBtnHtml = `<span class="badge ok" title="Sudah diverifikasi oleh Admin">✓ Terverifikasi</span>`;
+          } else if (isDitolak) {
+            verifBtnHtml = `<div style="display:flex; flex-direction:column; align-items:flex-start;">
+              <span class="badge err" title="Absensi Ditolak">✕ Ditolak</span>
+              ${catatan ? `<button type="button" class="btn-catatan-tag" title="Klik untuk membaca catatan penolakan dari admin" onclick="lihatCatatanPenolakan('${esc(d.dosen)}', '${esc(d.mataKuliah)}', ${d.pertemuan}, '${esc(catatan)}')">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span>Catatan</span>
+              </button>` : ''}
+            </div>`;
           } else {
             verifBtnHtml = `<span class="badge warn" title="Menunggu verifikasi oleh Admin">Menunggu Verifikasi</span>`;
           }
         } else {
-          // Mode Admin: Tombol interaktif untuk memverifikasi atau membatalkan status
+          // Mode Admin: Interaktif
           if (isProses) {
             verifBtnHtml = `<span class="badge warn">Memproses...</span>`;
           } else if (isVerif) {
-            verifBtnHtml = `<button type="button" class="badge-verif-btn ok" title="Sudah Terverifikasi. Klik untuk membatalkan / ubah status" onclick="verifikasiKehadiran(${d.no}, '${esc(d.kodeMatkul)}', ${d.pertemuan}, 'Menunggu Verifikasi')">✓ Terverifikasi</button>`;
+            verifBtnHtml = `<button type="button" class="badge-verif-btn ok" title="Sudah Terverifikasi. Klik untuk membatalkan atau menolak" onclick="bukaDialogAdminVerif(${d.no}, '${esc(d.kodeMatkul)}', ${d.pertemuan})">✓ Terverifikasi</button>`;
+          } else if (isDitolak) {
+            verifBtnHtml = `<div style="display:flex; flex-direction:column; align-items:flex-start;">
+              <button type="button" class="badge-verif-btn err" title="Status Ditolak. Klik untuk ubah status atau catatan" onclick="bukaDialogAdminVerif(${d.no}, '${esc(d.kodeMatkul)}', ${d.pertemuan})">✕ Ditolak</button>
+              ${catatan ? `<button type="button" class="btn-catatan-tag" title="Klik untuk melihat catatan penolakan" onclick="lihatCatatanPenolakan('${esc(d.dosen)}', '${esc(d.mataKuliah)}', ${d.pertemuan}, '${esc(catatan)}')">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span>Catatan</span>
+              </button>` : ''}
+            </div>`;
           } else {
-            verifBtnHtml = `<button type="button" class="btn-verif-action" title="Klik untuk langsung memverifikasi kehadiran ini" onclick="verifikasiKehadiran(${d.no}, '${esc(d.kodeMatkul)}', ${d.pertemuan}, 'Terverifikasi')">✓ Verifikasi</button>`;
+            verifBtnHtml = `<div class="admin-verif-group">
+              <button type="button" class="btn-verif-action" title="Setujui dan Verifikasi Kehadiran" onclick="verifikasiKehadiran(${d.no}, '${esc(d.kodeMatkul)}', ${d.pertemuan}, 'Terverifikasi')">✓ Setujui</button>
+              <button type="button" class="btn-tolak-action" title="Tolak Absensi dengan Catatan" onclick="tolakKehadiranDenganCatatan(${d.no}, '${esc(d.kodeMatkul)}', ${d.pertemuan})">✕ Tolak</button>
+            </div>`;
           }
         }
 
@@ -571,6 +604,26 @@ function render() {
           }
         }
 
+        // 2. Kolom Aksi (Tombol Edit / Revisi Absensi)
+        let aksiCellHtml = '';
+        if (isVerif) {
+          aksiCellHtml = `<button type="button" class="btn-edit-absensi disabled" disabled title="Terkunci: Absensi sudah terverifikasi dan tidak dapat diedit">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            <span>Edit</span>
+          </button>`;
+        } else {
+          aksiCellHtml = `<button type="button" class="btn-edit-absensi" title="${isDitolak ? 'Revisi dan perbaiki absensi ini' : 'Edit data absensi'}" onclick="mulaiEditAbsensi(${d.no}, '${esc(d.kodeMatkul)}', ${d.pertemuan})">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            <span>${isDitolak ? 'Revisi' : 'Edit'}</span>
+          </button>`;
+        }
+
         return `<tr>
           <td>${formatTanggal(d.tanggal)}</td>
           <td><strong>${esc(d.dosen)}</strong></td>
@@ -589,6 +642,7 @@ function render() {
           <td style="text-align:center;">${buktiHtml}</td>
           <td>${esc(d.statusKehadiran)}</td>
           <td>${verifCellHtml}</td>
+          <td style="text-align:center;">${aksiCellHtml}</td>
         </tr>`;
       }).join('');
 
@@ -735,7 +789,7 @@ function renderDropdownPagination(containerId, currentPage, totalPages, totalIte
 }
 
 // ====== FUNGSI VERIFIKASI LANGSUNG DARI WEB (DENGAN SWEETALERT2) ======
-async function verifikasiKehadiran(no, kodeMatkul, pertemuan, statusBaru) {
+async function verifikasiKehadiran(no, kodeMatkul, pertemuan, statusBaru, catatan = '') {
   if (!isAdminLoggedIn || !savedAdminPin) {
     if (typeof Swal !== 'undefined') {
       Swal.fire({
@@ -755,19 +809,19 @@ async function verifikasiKehadiran(no, kodeMatkul, pertemuan, statusBaru) {
   }
 
   const isBatal = statusBaru !== 'Terverifikasi';
-  const actionTitle = isBatal ? 'Batalkan Verifikasi?' : 'Konfirmasi Verifikasi';
-  const actionHtml = isBatal
-    ? `Apakah Anda yakin ingin membatalkan status verifikasi pertemuan ke-<b>${pertemuan}</b> (${kodeMatkul}) kembali menjadi <span style="color:#f59e0b;font-weight:700;">"${statusBaru}"</span>?`
-    : `Apakah Anda yakin ingin memverifikasi kehadiran perkuliahan ke-<b>${pertemuan}</b> (${kodeMatkul}) menjadi <span style="color:#0a62e8;font-weight:700;">"${statusBaru}"</span>?`;
-  const confirmBtnText = isBatal ? 'Ya, Batalkan Verifikasi' : 'Ya, Verifikasi Kehadiran';
-  const confirmBtnColor = isBatal ? '#e11d48' : '#0a62e8';
+  const actionTitle = statusBaru === 'Terverifikasi' ? 'Konfirmasi Verifikasi' : (statusBaru === 'Ditolak' ? 'Konfirmasi Penolakan' : 'Batalkan Verifikasi?');
+  const actionHtml = statusBaru === 'Terverifikasi'
+    ? `Apakah Anda yakin ingin memverifikasi kehadiran perkuliahan ke-<b>${pertemuan}</b> (${kodeMatkul}) menjadi <span style="color:#0a62e8;font-weight:700;">"Terverifikasi"</span>?`
+    : `Apakah Anda yakin ingin mengubah status pertemuan ke-<b>${pertemuan}</b> (${kodeMatkul}) menjadi <span style="color:#f59e0b;font-weight:700;">"${statusBaru}"</span>?`;
+  const confirmBtnText = statusBaru === 'Terverifikasi' ? 'Ya, Verifikasi Kehadiran' : `Ya, Ubah ke ${statusBaru}`;
+  const confirmBtnColor = statusBaru === 'Terverifikasi' ? '#0a62e8' : (statusBaru === 'Ditolak' ? '#e11d48' : '#f59e0b');
 
   let konfirm = false;
   if (typeof Swal !== 'undefined') {
     const swalRes = await Swal.fire({
       title: actionTitle,
       html: actionHtml,
-      icon: isBatal ? 'warning' : 'question',
+      icon: statusBaru === 'Terverifikasi' ? 'question' : 'warning',
       showCancelButton: true,
       confirmButtonColor: confirmBtnColor,
       cancelButtonColor: '#64748b',
@@ -790,6 +844,7 @@ async function verifikasiKehadiran(no, kodeMatkul, pertemuan, statusBaru) {
   );
 
   const statusLama = item ? item.statusVerifikasi : '';
+  const catatanLama = item ? (item.catatanPenolakan || item.catatan || '') : '';
   if (item) {
     item.statusVerifikasi = 'Memproses...';
     render();
@@ -803,7 +858,10 @@ async function verifikasiKehadiran(no, kodeMatkul, pertemuan, statusBaru) {
       no: no,
       kodeMatkul: kodeMatkul,
       pertemuan: pertemuan,
-      status: statusBaru
+      status: statusBaru,
+      statusVerifikasi: statusBaru,
+      catatan: catatan,
+      catatanPenolakan: catatan
     };
 
     const res = await fetch(SCRIPT_URL, {
@@ -815,6 +873,8 @@ async function verifikasiKehadiran(no, kodeMatkul, pertemuan, statusBaru) {
 
     if (item) {
       item.statusVerifikasi = statusBaru;
+      item.catatanPenolakan = catatan;
+      item.catatan = catatan;
     }
     render();
 
@@ -842,14 +902,598 @@ async function verifikasiKehadiran(no, kodeMatkul, pertemuan, statusBaru) {
     }
     if (item) {
       item.statusVerifikasi = statusLama;
+      item.catatanPenolakan = catatanLama;
+      item.catatan = catatanLama;
       render();
     }
   }
 }
 
+// ====== TOLAK KEHADIRAN DENGAN CATATAN ADMIN ======
+async function tolakKehadiranDenganCatatan(no, kodeMatkul, pertemuan) {
+  if (!isAdminLoggedIn || !savedAdminPin) {
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Akses Ditolak',
+        text: 'Silakan Masuk sebagai Admin terlebih dahulu untuk menolak absensi.',
+        confirmButtonColor: '#0a62e8',
+        confirmButtonText: 'Masuk Admin'
+      }).then((res) => {
+        if (res.isConfirmed) bukaModalAdminAuth();
+      });
+    } else {
+      alert('Akses ditolak: Silakan Masuk sebagai Admin terlebih dahulu.');
+      bukaModalAdminAuth();
+    }
+    return;
+  }
+
+  const item = semuaData.find(d => 
+    (no && Number(d.no) === Number(no)) ||
+    (d.kodeMatkul === kodeMatkul && Number(d.pertemuan) === Number(pertemuan))
+  );
+
+  const catatanEksis = item ? (item.catatanPenolakan || item.catatan || '') : '';
+
+  if (typeof Swal !== 'undefined') {
+    const { value: catatanInput, isConfirmed } = await Swal.fire({
+      title: 'Tolak Absensi Perkuliahan',
+      html: `Berikan catatan revisi untuk pertemuan ke-<b>${pertemuan}</b> (${kodeMatkul}) - <b>${esc(item ? item.dosen : '')}</b>:`,
+      input: 'textarea',
+      inputValue: catatanEksis,
+      inputPlaceholder: 'Tuliskan alasan penolakan atau instruksi revisi untuk dosen (misal: Bukti foto kurang jelas / materi tidak sesuai)...',
+      inputAttributes: {
+        'aria-label': 'Catatan penolakan'
+      },
+      showCancelButton: true,
+      confirmButtonText: '✕ Simpan Penolakan',
+      confirmButtonColor: '#e11d48',
+      cancelButtonText: 'Batal',
+      cancelButtonColor: '#64748b',
+      reverseButtons: true,
+      inputValidator: (value) => {
+        if (!value || !value.trim()) {
+          return 'Catatan penolakan wajib diisi agar dosen mengetahui bagian yang perlu direvisi!';
+        }
+      }
+    });
+
+    if (!isConfirmed) return;
+    const catatan = catatanInput.trim();
+
+    const statusLama = item ? item.statusVerifikasi : '';
+    if (item) {
+      item.statusVerifikasi = 'Memproses...';
+      render();
+    }
+
+    try {
+      const payload = {
+        action: 'verifikasi',
+        secret: SECRET_KEY,
+        pin: savedAdminPin,
+        no: no,
+        kodeMatkul: kodeMatkul,
+        pertemuan: pertemuan,
+        status: 'Ditolak',
+        statusVerifikasi: 'Ditolak',
+        catatan: catatan,
+        catatanPenolakan: catatan
+      };
+
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (json.status !== 'ok') throw new Error(json.message || 'Gagal menolak absensi');
+
+      if (item) {
+        item.statusVerifikasi = 'Ditolak';
+        item.catatanPenolakan = catatan;
+        item.catatan = catatan;
+      }
+      render();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Absensi Ditolak',
+        html: `Status absensi telah diubah menjadi <b>"Ditolak"</b> dan catatan penolakan telah tersimpan.`,
+        timer: 2000,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end'
+      });
+    } catch(err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal Memproses',
+        text: err.message || 'Gagal memproses penolakan. Silakan coba lagi.',
+        confirmButtonColor: '#0a62e8'
+      });
+      if (item) {
+        item.statusVerifikasi = statusLama;
+        render();
+      }
+    }
+  } else {
+    const catatan = prompt('Tuliskan alasan penolakan untuk dosen:');
+    if (!catatan || !catatan.trim()) return;
+    verifikasiKehadiran(no, kodeMatkul, pertemuan, 'Ditolak', catatan.trim());
+  }
+}
+
+// ====== DIALOG OPSI ADMIN UNTUK DATA YANG SUDAH TERVERIFIKASI / DITOLAK ======
+async function bukaDialogAdminVerif(no, kodeMatkul, pertemuan) {
+  if (!isAdminLoggedIn) return;
+
+  const item = semuaData.find(d => 
+    (no && Number(d.no) === Number(no)) ||
+    (d.kodeMatkul === kodeMatkul && Number(d.pertemuan) === Number(pertemuan))
+  );
+  if (!item) return;
+
+  const isVerif = (item.statusVerifikasi || '').toLowerCase().includes('terverifikasi');
+  const isDitolak = (item.statusVerifikasi || '').toLowerCase().includes('ditolak');
+
+  if (typeof Swal !== 'undefined') {
+    if (isVerif) {
+      const res = await Swal.fire({
+        title: 'Kelola Status Verifikasi',
+        html: `Pertemuan ke-<b>${pertemuan}</b> (${kodeMatkul}) saat ini berstatus <span style="color:#0a62e8;font-weight:700;">"Terverifikasi"</span>.<br>Pilih aksi selanjutnya:`,
+        icon: 'question',
+        showCancelButton: true,
+        showDenyButton: true,
+        confirmButtonText: 'Batalkan ke Menunggu',
+        confirmButtonColor: '#f59e0b',
+        denyButtonText: 'Tolak dengan Catatan',
+        denyButtonColor: '#e11d48',
+        cancelButtonText: 'Tutup',
+        cancelButtonColor: '#64748b'
+      });
+
+      if (res.isConfirmed) {
+        verifikasiKehadiran(no, kodeMatkul, pertemuan, 'Menunggu Verifikasi');
+      } else if (res.isDenied) {
+        tolakKehadiranDenganCatatan(no, kodeMatkul, pertemuan);
+      }
+    } else if (isDitolak) {
+      const res = await Swal.fire({
+        title: 'Kelola Status Ditolak',
+        html: `Pertemuan ke-<b>${pertemuan}</b> (${kodeMatkul}) saat ini berstatus <span style="color:#e11d48;font-weight:700;">"Ditolak"</span>.<br>Pilih tindakan yang diinginkan:`,
+        icon: 'warning',
+        showCancelButton: true,
+        showDenyButton: true,
+        confirmButtonText: '✓ Setujui (Terverifikasi)',
+        confirmButtonColor: '#0a62e8',
+        denyButtonText: 'Edit Catatan Penolakan',
+        denyButtonColor: '#f59e0b',
+        cancelButtonText: 'Tutup',
+        cancelButtonColor: '#64748b'
+      });
+
+      if (res.isConfirmed) {
+        verifikasiKehadiran(no, kodeMatkul, pertemuan, 'Terverifikasi');
+      } else if (res.isDenied) {
+        tolakKehadiranDenganCatatan(no, kodeMatkul, pertemuan);
+      }
+    }
+  }
+}
+
+// ====== MODAL CATATAN PENOLAKAN ADMIN ======
+function lihatCatatanPenolakan(dosen, matkul, pertemuan, catatan) {
+  if (typeof Swal !== 'undefined') {
+    Swal.fire({
+      title: 'Catatan Penolakan Admin',
+      html: `
+        <div style="text-align:left; font-size:13px; color:var(--text-secondary); margin-bottom:12px;">
+          <strong>${esc(dosen)}</strong> • ${esc(matkul)} (Pertemuan ${esc(pertemuan)})
+        </div>
+        <div style="text-align:left; background:rgba(225,29,72,0.06); border:1.5px solid rgba(225,29,72,0.3); border-radius:8px; padding:14px; font-size:13.5px; line-height:1.6; color:var(--text-primary);">
+          <div style="font-weight:700; color:#e11d48; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            Alasan Penolakan:
+          </div>
+          <div>${esc(catatan)}</div>
+        </div>
+        <div style="margin-top:14px; font-size:12.5px; color:var(--text-muted); text-align:left;">
+          Silakan klik tombol <b>Revisi / Edit</b> pada tabel untuk memperbaiki absensi Anda dan mengirimkannya kembali.
+        </div>
+      `,
+      icon: 'warning',
+      confirmButtonText: 'Tutup',
+      confirmButtonColor: '#0a62e8'
+    });
+  } else {
+    alert('Catatan Penolakan:\n\n' + catatan);
+  }
+}
+
+// ====== MODAL EDIT ABSENSI (OPSI A) ======
+const modalEditAbsensi = document.getElementById('modalEditAbsensi');
+const btnCloseEditModal = document.getElementById('btnCloseEditModal');
+const btnCancelEdit = document.getElementById('btnCancelEdit');
+const formEditAbsensi = document.getElementById('formEditAbsensi');
+const editAdaTransport = document.getElementById('editAdaTransport');
+const wrapEditNominalTransport = document.getElementById('wrapEditNominalTransport');
+const wrapEditFileTransport = document.getElementById('wrapEditFileTransport');
+const editFileBukti = document.getElementById('editFileBukti');
+const editFileBuktiPreview = document.getElementById('editFileBuktiPreview');
+const editFileBuktiThumb = document.getElementById('editFileBuktiThumb');
+const editFileTransport = document.getElementById('editFileTransport');
+
+let activeEditPin = '';
+
+function tutupModalEditAbsensi() {
+  if (modalEditAbsensi) {
+    modalEditAbsensi.classList.remove('active');
+  }
+}
+
+if (btnCloseEditModal) btnCloseEditModal.addEventListener('click', tutupModalEditAbsensi);
+if (btnCancelEdit) btnCancelEdit.addEventListener('click', tutupModalEditAbsensi);
+if (modalEditAbsensi) {
+  modalEditAbsensi.addEventListener('click', (e) => {
+    if (e.target === modalEditAbsensi) tutupModalEditAbsensi();
+  });
+}
+
+function updateEditTransportVisibility() {
+  const ada = editAdaTransport && editAdaTransport.value === 'ya';
+  if (wrapEditNominalTransport) wrapEditNominalTransport.style.display = ada ? 'block' : 'none';
+  if (wrapEditFileTransport) wrapEditFileTransport.style.display = ada ? 'block' : 'none';
+  if (!ada) {
+    const inputNominal = document.getElementById('editNominalTransport');
+    if (inputNominal) inputNominal.value = '';
+    if (editFileTransport) editFileTransport.value = '';
+  }
+}
+
+if (editAdaTransport) {
+  editAdaTransport.addEventListener('change', updateEditTransportVisibility);
+}
+
+if (editFileBukti) {
+  editFileBukti.addEventListener('change', () => {
+    const file = editFileBukti.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (editFileBuktiThumb) editFileBuktiThumb.src = e.target.result;
+        if (editFileBuktiPreview) editFileBuktiPreview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      if (editFileBuktiPreview) editFileBuktiPreview.style.display = 'none';
+    }
+  });
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = error => reject(error);
+    reader.readAsDataURL(file);
+  });
+}
+
+// Buka Modal Edit Absensi (Validasi PIN Dosen / Admin)
+async function mulaiEditAbsensi(no, kodeMatkul, pertemuan) {
+  const item = semuaData.find(d => 
+    (no && Number(d.no) === Number(no)) ||
+    (d.kodeMatkul === kodeMatkul && Number(d.pertemuan) === Number(pertemuan))
+  );
+
+  if (!item) {
+    alert('Data absensi tidak ditemukan.');
+    return;
+  }
+
+  const isVerif = (item.statusVerifikasi || '').toLowerCase().includes('terverifikasi');
+  if (isVerif) {
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        icon: 'info',
+        title: 'Absensi Terkunci',
+        text: 'Data absensi yang telah Terverifikasi oleh Admin tidak dapat diedit kembali.',
+        confirmButtonColor: '#0a62e8'
+      });
+    } else {
+      alert('Data absensi yang telah Terverifikasi oleh Admin tidak dapat diedit kembali.');
+    }
+    return;
+  }
+
+  // Jika bukan Admin yang login, minta PIN Dosen
+  if (!isAdminLoggedIn) {
+    const sessionKey = 'dosen_auth_pin_' + item.dosen;
+    let authPin = sessionStorage.getItem(sessionKey);
+
+    if (!authPin) {
+      if (typeof Swal !== 'undefined') {
+        const { value: inputPin, isConfirmed } = await Swal.fire({
+          title: 'Verifikasi Dosen Pengampu',
+          html: `Masukkan PIN untuk mengedit absensi:<br><strong>${esc(item.dosen)}</strong>`,
+          input: 'password',
+          inputPlaceholder: 'Masukkan PIN Dosen',
+          showCancelButton: true,
+          confirmButtonText: 'Lanjutkan Edit',
+          confirmButtonColor: '#0a62e8',
+          cancelButtonText: 'Batal',
+          cancelButtonColor: '#64748b',
+          inputValidator: (val) => {
+            if (!val || !val.trim()) return 'PIN wajib diisi!';
+            const pinTrim = val.trim();
+            const passBenar = dosenPasswordsMap[item.dosen];
+            if (passBenar) {
+              if (pinTrim !== passBenar && !daftarPasswordSah.includes(pinTrim)) {
+                return 'PIN tidak cocok untuk dosen ini!';
+              }
+            } else {
+              if (!daftarPasswordSah.includes(pinTrim)) {
+                return 'PIN salah!';
+              }
+            }
+          }
+        });
+
+        if (!isConfirmed) return;
+        authPin = inputPin.trim();
+        sessionStorage.setItem(sessionKey, authPin);
+      } else {
+        const inputPin = prompt(`Masukkan PIN untuk ${item.dosen}:`);
+        if (!inputPin) return;
+        authPin = inputPin.trim();
+      }
+    }
+    activeEditPin = authPin;
+  } else {
+    activeEditPin = savedAdminPin;
+  }
+
+  // Isi data ke Form Edit Modal
+  document.getElementById('editItemNo').value = item.no || '';
+  document.getElementById('editItemKodeMatkul').value = item.kodeMatkul || '';
+  document.getElementById('editItemPertemuan').value = item.pertemuan || '';
+
+  document.getElementById('editDosenNama').textContent = item.dosen || '-';
+  document.getElementById('editMatkulNama').textContent = (item.mataKuliah || item.kodeMatkul || '-') + (item.kodeMatkul ? ` (${item.kodeMatkul})` : '');
+  document.getElementById('editPertemuanKe').textContent = `Pertemuan ${item.pertemuan || '-'}`;
+  document.getElementById('editSemesterVal').textContent = `Semester ${item.semester || '-'}`;
+
+  // Tanggal
+  let tglFormatted = '';
+  if (item.tanggal) {
+    if (typeof item.tanggal === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item.tanggal.trim())) {
+      tglFormatted = item.tanggal.trim();
+    } else {
+      const dt = new Date(item.tanggal);
+      if (!isNaN(dt.getTime())) {
+        tglFormatted = dt.toISOString().slice(0, 10);
+      }
+    }
+  }
+  document.getElementById('editTanggal').value = tglFormatted || new Date().toISOString().slice(0, 10);
+
+  // Status Kehadiran
+  document.getElementById('editStatusKehadiran').value = item.statusKehadiran || 'Hadir';
+
+  // Metode
+  document.getElementById('editMetode').value = item.metode || 'Offline';
+
+  // Lokasi
+  document.getElementById('editLokasi').value = item.lokasi || '';
+
+  // Materi
+  document.getElementById('editMateri').value = item.linkMateri || item.materi || '';
+
+  // Banner Catatan Penolakan jika status Ditolak
+  const alertRejection = document.getElementById('editAlertRejection');
+  const alertNoteText = document.getElementById('editRejectionNoteText');
+  const catatan = (item.catatanPenolakan || item.catatan || item.catatanAdmin || '').trim();
+  const isDitolak = (item.statusVerifikasi || '').toLowerCase().includes('ditolak');
+
+  if (isDitolak && catatan) {
+    if (alertNoteText) alertNoteText.textContent = catatan;
+    if (alertRejection) alertRejection.style.display = 'flex';
+  } else {
+    if (alertRejection) alertRejection.style.display = 'none';
+  }
+
+  // Foto Bukti
+  const linkBukti = (item.buktiKelas || item.bukti || item.linkBukti || '').trim();
+  const wrapBukti = document.getElementById('editCurrentBuktiWrap');
+  const linkBuktiEl = document.getElementById('editCurrentBuktiLink');
+  if (linkBukti && linkBukti !== '-') {
+    wrapBukti.style.display = 'flex';
+    linkBuktiEl.href = linkBukti;
+  } else {
+    wrapBukti.style.display = 'none';
+  }
+  if (editFileBukti) editFileBukti.value = '';
+  if (editFileBuktiPreview) editFileBuktiPreview.style.display = 'none';
+
+  // Struk Transportasi
+  const nominal = item.nominalTransport || item.biayaTransport || 0;
+  const linkStruk = (item.linkStrukTransport || item.linkStruk || item.struk || '').trim();
+  const adaTransport = Number(nominal) > 0 || (linkStruk && linkStruk !== '-');
+  if (editAdaTransport) editAdaTransport.value = adaTransport ? 'ya' : 'tidak';
+  updateEditTransportVisibility();
+  document.getElementById('editNominalTransport').value = Number(nominal) > 0 ? Number(nominal) : '';
+
+  const wrapStruk = document.getElementById('editCurrentStrukWrap');
+  const linkStrukEl = document.getElementById('editCurrentStrukLink');
+  if (linkStruk && linkStruk !== '-') {
+    wrapStruk.style.display = 'flex';
+    linkStrukEl.href = linkStruk;
+  } else {
+    wrapStruk.style.display = 'none';
+  }
+  if (editFileTransport) editFileTransport.value = '';
+
+  // Buka modal
+  modalEditAbsensi.classList.add('active');
+}
+
+// Submit Simpan Perubahan Edit
+if (formEditAbsensi) {
+  formEditAbsensi.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const no = document.getElementById('editItemNo').value;
+    const kodeMatkul = document.getElementById('editItemKodeMatkul').value;
+    const pertemuan = document.getElementById('editItemPertemuan').value;
+
+    const item = semuaData.find(d => 
+      (no && Number(d.no) === Number(no)) ||
+      (d.kodeMatkul === kodeMatkul && Number(d.pertemuan) === Number(pertemuan))
+    );
+
+    const tgl = document.getElementById('editTanggal').value;
+    const statusKehadiran = document.getElementById('editStatusKehadiran').value;
+    const metode = document.getElementById('editMetode').value;
+    const lokasi = document.getElementById('editLokasi').value.trim();
+    const materi = document.getElementById('editMateri').value.trim();
+
+    const adaTransport = editAdaTransport && editAdaTransport.value === 'ya';
+    const nominalTransport = adaTransport ? (document.getElementById('editNominalTransport').value || '0') : '0';
+
+    const btnSubmit = document.getElementById('btnSubmitEdit');
+    const btnText = document.getElementById('btnSubmitEditText');
+    const spinner = document.getElementById('editSpinner');
+
+    if (btnSubmit) btnSubmit.disabled = true;
+    if (btnText) btnText.textContent = 'Menyimpan...';
+    if (spinner) spinner.style.display = 'inline-block';
+
+    try {
+      let fileBuktiBase64 = '';
+      let namaFileBukti = '';
+      let mimeFileBukti = '';
+
+      if (editFileBukti && editFileBukti.files.length > 0) {
+        const fileB = editFileBukti.files[0];
+        fileBuktiBase64 = await fileToBase64(fileB);
+        namaFileBukti = fileB.name;
+        mimeFileBukti = fileB.type || 'image/jpeg';
+      }
+
+      let fileStrukBase64 = '';
+      let namaFileStruk = '';
+      let mimeFileStruk = '';
+
+      if (adaTransport && editFileTransport && editFileTransport.files.length > 0) {
+        const fileS = editFileTransport.files[0];
+        fileStrukBase64 = await fileToBase64(fileS);
+        namaFileStruk = fileS.name;
+        mimeFileStruk = fileS.type || 'image/jpeg';
+      }
+
+      const payload = {
+        action: 'edit',
+        secret: SECRET_KEY,
+        pin: activeEditPin || savedAdminPin || '',
+        no: no,
+        kodeMatkul: kodeMatkul,
+        pertemuan: pertemuan,
+        tanggal: tgl,
+        statusKehadiran: statusKehadiran,
+        status: statusKehadiran,
+        metode: metode,
+        lokasi: lokasi,
+        linkMateri: materi,
+        materi: materi,
+        adaStrukTransport: adaTransport ? 'Ya' : 'Tidak',
+        nominalTransport: nominalTransport,
+        biayaTransport: nominalTransport,
+        // File Bukti (diisi jika ada file baru)
+        fileBase64: fileBuktiBase64,
+        namaFile: namaFileBukti,
+        mimeFile: mimeFileBukti,
+        // File Struk (diisi jika ada file baru)
+        fileTransportBase64: fileStrukBase64,
+        namaFileTransport: namaFileStruk,
+        mimeFileTransport: mimeFileStruk
+      };
+
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+
+      if (json.status !== 'ok') {
+        throw new Error(json.message || 'Gagal menyimpan perubahan absensi.');
+      }
+
+      // Update state lokal
+      if (item) {
+        item.tanggal = tgl;
+        item.statusKehadiran = statusKehadiran;
+        item.metode = metode;
+        item.lokasi = lokasi;
+        item.linkMateri = materi;
+        item.materi = materi;
+        item.statusVerifikasi = 'Menunggu Verifikasi';
+        item.catatanPenolakan = '';
+        item.catatan = '';
+        item.nominalTransport = nominalTransport;
+        item.biayaTransport = nominalTransport;
+        if (json.linkBukti) item.buktiKelas = json.linkBukti;
+        if (json.linkStruk) item.linkStrukTransport = json.linkStruk;
+      }
+
+      tutupModalEditAbsensi();
+      render();
+
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil Diperbarui',
+          html: 'Data absensi berhasil diperbaiki.<br><span style="font-size:13px;color:var(--text-secondary);">Status absensi dikembalikan ke <b>"Menunggu Verifikasi"</b> untuk ditinjau ulang oleh Admin.</span>',
+          confirmButtonColor: '#0a62e8'
+        });
+      } else {
+        alert('Data absensi berhasil diperbaiki dan status dikembalikan ke Menunggu Verifikasi.');
+      }
+    } catch (err) {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal Menyimpan',
+          text: err.message || 'Terjadi kesalahan saat menyimpan perubahan. Silakan coba lagi.',
+          confirmButtonColor: '#0a62e8'
+        });
+      } else {
+        alert('Gagal menyimpan perubahan: ' + err.message);
+      }
+    } finally {
+      if (btnSubmit) btnSubmit.disabled = false;
+      if (btnText) btnText.textContent = 'Simpan Perubahan';
+      if (spinner) spinner.style.display = 'none';
+    }
+  });
+}
+
 // Global scope bindings for HTML event attributes
 window.tampilkanBukti = tampilkanBukti;
 window.verifikasiKehadiran = verifikasiKehadiran;
+window.tolakKehadiranDenganCatatan = tolakKehadiranDenganCatatan;
+window.bukaDialogAdminVerif = bukaDialogAdminVerif;
+window.lihatCatatanPenolakan = lihatCatatanPenolakan;
+window.mulaiEditAbsensi = mulaiEditAbsensi;
+window.tutupModalEditAbsensi = tutupModalEditAbsensi;
 window.tutupModalBukti = tutupModalBukti;
 window.bukaModalAdminAuth = bukaModalAdminAuth;
 window.tutupModalAdminAuth = tutupModalAdminAuth;
