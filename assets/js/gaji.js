@@ -18,7 +18,7 @@ const FALLBACK_SKS = {
 let masterData = { matkul: [], dosen: [], passwords: [] };
 let rawAbsensi = [];
 let mapSksMatkul = { ...FALLBACK_SKS };
-let daftarPasswordSah = ['adminidn2026', 'absensidosenpidnb2026']; // Default fallback jika offline
+let daftarPasswordSah = []; // Diisi dinamis murni dari Spreadsheet (Kolom J & Kolom M)
 
 // Helper Sanitasi & Format
 function esc(teks) {
@@ -69,7 +69,7 @@ async function ambilMasterData() {
     if (json && json.status === 'ok') {
       masterData = json;
 
-      // Ambil daftar password dari Kolom J yang dikirimkan Apps Script
+      // Ambil daftar password dari Kolom J (Admin) dan Kolom M (PIN Dosen) murni dari Spreadsheet
       const sandiServer = [];
       if (json.passwords && Array.isArray(json.passwords)) {
         sandiServer.push(...json.passwords);
@@ -81,9 +81,7 @@ async function ambilMasterData() {
         sandiServer.push(...Object.values(json.dosenPasswords));
       }
 
-      if (sandiServer.length > 0) {
-        daftarPasswordSah = [...new Set([...sandiServer, ...daftarPasswordSah])];
-      }
+      daftarPasswordSah = [...new Set(sandiServer.map(p => String(p).trim()).filter(Boolean))];
 
       // Petakan SKS per Kode Matkul & Nama Matkul
       if (json.matkul && Array.isArray(json.matkul)) {

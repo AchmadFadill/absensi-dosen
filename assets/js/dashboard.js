@@ -11,12 +11,34 @@ let semuaData = [];
 let chartStatus = null;
 let chartMatkul = null;
 
-// State Admin & PIN (Kolom J Sheet Matkul)
+// State Admin & PIN (Dinamis dari Sheet Matkul)
 let isAdminLoggedIn = false;
 let savedAdminPin = '';
-let daftarPasswordSah = ['adminidn2026', 'absensidosenpidnb2026'];
+let daftarAdminPasswords = [];
 let dosenPasswordsMap = {};
 let masterFetchPromise = null;
+
+function cariPinDosen(namaDosen) {
+  if (!namaDosen) return '';
+  const target = String(namaDosen).trim();
+  if (dosenPasswordsMap[target]) return dosenPasswordsMap[target];
+
+  const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const targetNorm = norm(target);
+
+  for (const d in dosenPasswordsMap) {
+    if (norm(d) === targetNorm) return dosenPasswordsMap[d];
+  }
+
+  for (const d in dosenPasswordsMap) {
+    const dNorm = norm(d);
+    if (dNorm.startsWith(targetNorm.slice(0, 10)) || targetNorm.startsWith(dNorm.slice(0, 10))) {
+      return dosenPasswordsMap[d];
+    }
+  }
+
+  return '';
+}
 
 // Fallback map SKS berdasarkan sheet Matkul (tanpa ubah sheet Absensi)
 const FALLBACK_SKS = {
@@ -108,19 +130,19 @@ async function ambilMasterPasswords() {
     const res = await fetch(SCRIPT_URL + '?action=master');
     const mJson = await res.json();
     if (mJson && mJson.status === 'ok') {
-      const sandiServer = [];
+      // 1. Password Admin murni dari Spreadsheet Kolom J
+      const sandiAdmin = [];
       if (mJson.passwords && Array.isArray(mJson.passwords)) {
-        sandiServer.push(...mJson.passwords);
+        sandiAdmin.push(...mJson.passwords);
       }
       if (mJson.password) {
-        sandiServer.push(mJson.password);
+        sandiAdmin.push(mJson.password);
       }
+      daftarAdminPasswords = [...new Set(sandiAdmin.map(p => String(p).trim()).filter(Boolean))];
+
+      // 2. PIN Dosen murni dari Spreadsheet Kolom L & M
       if (mJson.dosenPasswords && typeof mJson.dosenPasswords === 'object') {
         dosenPasswordsMap = { ...mJson.dosenPasswords };
-        sandiServer.push(...Object.values(mJson.dosenPasswords));
-      }
-      if (sandiServer.length > 0) {
-        daftarPasswordSah = [...new Set([...sandiServer, ...daftarPasswordSah])];
       }
 
       if (mJson.matkul && Array.isArray(mJson.matkul)) {
@@ -252,7 +274,7 @@ if (formAdminAuth && inputAdminPin) {
       await ambilMasterPasswords();
     }
 
-    const cocok = daftarPasswordSah.some(p => {
+    const cocok = daftarAdminPasswords.some(p => {
       const strP = String(p).trim();
       return strP === pin || strP.toLowerCase() === pin.toLowerCase();
     });
@@ -1123,17 +1145,58 @@ const formEditAbsensi = document.getElementById('formEditAbsensi');
 const editAdaTransport = document.getElementById('editAdaTransport');
 const wrapEditNominalTransport = document.getElementById('wrapEditNominalTransport');
 const wrapEditFileTransport = document.getElementById('wrapEditFileTransport');
+
+// Elements File Bukti Baru
 const editFileBukti = document.getElementById('editFileBukti');
-const editFileBuktiPreview = document.getElementById('editFileBuktiPreview');
+const dropzoneEditBukti = document.getElementById('dropzoneEditBukti');
+const editBuktiEmpty = document.getElementById('editBuktiEmpty');
+const editBuktiSelected = document.getElementById('editBuktiSelected');
 const editFileBuktiThumb = document.getElementById('editFileBuktiThumb');
+const editBuktiFileName = document.getElementById('editBuktiFileName');
+const editBuktiFileSize = document.getElementById('editBuktiFileSize');
+const btnHapusEditBukti = document.getElementById('btnHapusEditBukti');
+
+// Elements File Struk Baru
 const editFileTransport = document.getElementById('editFileTransport');
+const dropzoneEditTransport = document.getElementById('dropzoneEditTransport');
+const editTransportEmpty = document.getElementById('editTransportEmpty');
+const editTransportSelected = document.getElementById('editTransportSelected');
+const editTransportFileName = document.getElementById('editTransportFileName');
+const editTransportFileSize = document.getElementById('editTransportFileSize');
+const editTransportThumbWrap = document.getElementById('editTransportThumbWrap');
+const btnHapusEditTransport = document.getElementById('btnHapusEditTransport');
 
 let activeEditPin = '';
+
+function formatUkuranFile(bytes) {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function resetEditBuktiFile() {
+  if (editFileBukti) editFileBukti.value = '';
+  if (editBuktiEmpty) editBuktiEmpty.style.display = 'flex';
+  if (editBuktiSelected) editBuktiSelected.style.display = 'none';
+  if (dropzoneEditBukti) dropzoneEditBukti.classList.remove('has-file', 'drag-over');
+  if (editFileBuktiThumb) editFileBuktiThumb.removeAttribute('src');
+}
+
+function resetEditTransportFile() {
+  if (editFileTransport) editFileTransport.value = '';
+  if (editTransportEmpty) editTransportEmpty.style.display = 'flex';
+  if (editTransportSelected) editTransportSelected.style.display = 'none';
+  if (dropzoneEditTransport) dropzoneEditTransport.classList.remove('has-file', 'drag-over');
+}
 
 function tutupModalEditAbsensi() {
   if (modalEditAbsensi) {
     modalEditAbsensi.classList.remove('active');
   }
+  resetEditBuktiFile();
+  resetEditTransportFile();
 }
 
 if (btnCloseEditModal) btnCloseEditModal.addEventListener('click', tutupModalEditAbsensi);
@@ -1151,7 +1214,7 @@ function updateEditTransportVisibility() {
   if (!ada) {
     const inputNominal = document.getElementById('editNominalTransport');
     if (inputNominal) inputNominal.value = '';
-    if (editFileTransport) editFileTransport.value = '';
+    resetEditTransportFile();
   }
 }
 
@@ -1159,18 +1222,127 @@ if (editAdaTransport) {
   editAdaTransport.addEventListener('change', updateEditTransportVisibility);
 }
 
+// Handler Upload Foto Bukti Baru
 if (editFileBukti) {
   editFileBukti.addEventListener('change', () => {
-    const file = editFileBukti.files[0];
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (editFileBuktiThumb) editFileBuktiThumb.src = e.target.result;
-        if (editFileBuktiPreview) editFileBuktiPreview.style.display = 'block';
-      };
-      reader.readAsDataURL(file);
+    const file = editFileBukti.files && editFileBukti.files[0];
+    if (file) {
+      if (editBuktiFileName) editBuktiFileName.textContent = file.name;
+      if (editBuktiFileSize) editBuktiFileSize.textContent = formatUkuranFile(file.size);
+      if (editBuktiEmpty) editBuktiEmpty.style.display = 'none';
+      if (editBuktiSelected) editBuktiSelected.style.display = 'flex';
+      if (dropzoneEditBukti) dropzoneEditBukti.classList.add('has-file');
+
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (editFileBuktiThumb) editFileBuktiThumb.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
     } else {
-      if (editFileBuktiPreview) editFileBuktiPreview.style.display = 'none';
+      resetEditBuktiFile();
+    }
+  });
+}
+
+if (btnHapusEditBukti) {
+  btnHapusEditBukti.addEventListener('click', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    resetEditBuktiFile();
+  });
+}
+
+if (dropzoneEditBukti) {
+  ['dragenter', 'dragover'].forEach(ev => {
+    dropzoneEditBukti.addEventListener(ev, (e) => {
+      e.preventDefault();
+      if (!dropzoneEditBukti.classList.contains('has-file')) {
+        dropzoneEditBukti.classList.add('drag-over');
+      }
+    });
+  });
+  ['dragleave', 'drop'].forEach(ev => {
+    dropzoneEditBukti.addEventListener(ev, (e) => {
+      e.preventDefault();
+      dropzoneEditBukti.classList.remove('drag-over');
+    });
+  });
+  dropzoneEditBukti.addEventListener('drop', (e) => {
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('image/')) {
+        editFileBukti.files = e.dataTransfer.files;
+        editFileBukti.dispatchEvent(new Event('change'));
+      }
+    }
+  });
+}
+
+// Handler Upload Struk Transportasi Baru
+if (editFileTransport) {
+  editFileTransport.addEventListener('change', () => {
+    const file = editFileTransport.files && editFileTransport.files[0];
+    if (file) {
+      if (editTransportFileName) editTransportFileName.textContent = file.name;
+      if (editTransportFileSize) editTransportFileSize.textContent = formatUkuranFile(file.size);
+      if (editTransportEmpty) editTransportEmpty.style.display = 'none';
+      if (editTransportSelected) editTransportSelected.style.display = 'flex';
+      if (dropzoneEditTransport) dropzoneEditTransport.classList.add('has-file');
+
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (editTransportThumbWrap) {
+            editTransportThumbWrap.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;" alt="Preview struk">`;
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        if (editTransportThumbWrap) {
+          editTransportThumbWrap.innerHTML = `
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>`;
+        }
+      }
+    } else {
+      resetEditTransportFile();
+    }
+  });
+}
+
+if (btnHapusEditTransport) {
+  btnHapusEditTransport.addEventListener('click', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    resetEditTransportFile();
+  });
+}
+
+if (dropzoneEditTransport) {
+  ['dragenter', 'dragover'].forEach(ev => {
+    dropzoneEditTransport.addEventListener(ev, (e) => {
+      e.preventDefault();
+      if (!dropzoneEditTransport.classList.contains('has-file')) {
+        dropzoneEditTransport.classList.add('drag-over');
+      }
+    });
+  });
+  ['dragleave', 'drop'].forEach(ev => {
+    dropzoneEditTransport.addEventListener(ev, (e) => {
+      e.preventDefault();
+      dropzoneEditTransport.classList.remove('drag-over');
+    });
+  });
+  dropzoneEditTransport.addEventListener('drop', (e) => {
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+      editFileTransport.files = e.dataTransfer.files;
+      editFileTransport.dispatchEvent(new Event('change'));
     }
   });
 }
@@ -1219,6 +1391,12 @@ async function mulaiEditAbsensi(no, kodeMatkul, pertemuan) {
     const sessionKey = 'dosen_auth_pin_' + item.dosen;
     let authPin = sessionStorage.getItem(sessionKey);
 
+    if (masterFetchPromise) {
+      await masterFetchPromise;
+    } else {
+      await ambilMasterPasswords();
+    }
+
     if (!authPin) {
       if (typeof Swal !== 'undefined') {
         const { value: inputPin, isConfirmed } = await Swal.fire({
@@ -1234,15 +1412,12 @@ async function mulaiEditAbsensi(no, kodeMatkul, pertemuan) {
           inputValidator: (val) => {
             if (!val || !val.trim()) return 'PIN wajib diisi!';
             const pinTrim = val.trim();
-            const passBenar = dosenPasswordsMap[item.dosen];
-            if (passBenar) {
-              if (pinTrim !== passBenar && !daftarPasswordSah.includes(pinTrim)) {
-                return 'PIN tidak cocok untuk dosen ini!';
-              }
-            } else {
-              if (!daftarPasswordSah.includes(pinTrim)) {
-                return 'PIN salah!';
-              }
+            const passBenar = cariPinDosen(item.dosen);
+            const cocokDosen = passBenar && (pinTrim === passBenar || pinTrim.toLowerCase() === passBenar.toLowerCase());
+            const cocokAdmin = daftarAdminPasswords.some(p => p === pinTrim || p.toLowerCase() === pinTrim.toLowerCase());
+
+            if (!cocokDosen && !cocokAdmin) {
+              return passBenar ? 'PIN tidak cocok untuk dosen ini!' : 'PIN salah atau dosen belum memiliki PIN di sheet!';
             }
           }
         });
@@ -1315,13 +1490,12 @@ async function mulaiEditAbsensi(no, kodeMatkul, pertemuan) {
   const wrapBukti = document.getElementById('editCurrentBuktiWrap');
   const linkBuktiEl = document.getElementById('editCurrentBuktiLink');
   if (linkBukti && linkBukti !== '-') {
-    wrapBukti.style.display = 'flex';
+    wrapBukti.style.display = 'inline-flex';
     linkBuktiEl.href = linkBukti;
   } else {
     wrapBukti.style.display = 'none';
   }
-  if (editFileBukti) editFileBukti.value = '';
-  if (editFileBuktiPreview) editFileBuktiPreview.style.display = 'none';
+  resetEditBuktiFile();
 
   // Struk Transportasi
   const nominal = item.nominalTransport || item.biayaTransport || 0;
@@ -1334,12 +1508,12 @@ async function mulaiEditAbsensi(no, kodeMatkul, pertemuan) {
   const wrapStruk = document.getElementById('editCurrentStrukWrap');
   const linkStrukEl = document.getElementById('editCurrentStrukLink');
   if (linkStruk && linkStruk !== '-') {
-    wrapStruk.style.display = 'flex';
+    wrapStruk.style.display = 'inline-flex';
     linkStrukEl.href = linkStruk;
   } else {
     wrapStruk.style.display = 'none';
   }
-  if (editFileTransport) editFileTransport.value = '';
+  resetEditTransportFile();
 
   // Buka modal
   modalEditAbsensi.classList.add('active');

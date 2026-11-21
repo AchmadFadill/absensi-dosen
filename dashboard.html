@@ -473,22 +473,73 @@
           </div>
 
           <!-- Section: Foto Bukti Perkuliahan -->
-          <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
-            <label style="font-weight: 600; font-size: 14px; margin-bottom: 8px;">Bukti Foto Kegiatan Kelas</label>
-            <div id="editCurrentBuktiWrap" style="margin-bottom: 10px; display: flex; align-items: center; gap: 12px;">
-              <span style="font-size: 13px; color: var(--text-secondary);">Foto saat ini:</span>
-              <a id="editCurrentBuktiLink" href="#" target="_blank" class="link-materi-btn" style="text-decoration:none;">Lihat Foto Tersimpan</a>
+          <div class="edit-section-divider">
+            <div class="edit-section-header">
+              <label class="edit-section-label">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                Bukti Foto Kegiatan Kelas
+              </label>
+              <div id="editCurrentBuktiWrap" class="current-file-badge">
+                <span class="dot-status"></span>
+                <span>Foto Tersimpan:</span>
+                <a id="editCurrentBuktiLink" href="#" target="_blank" class="link-materi-btn" style="text-decoration:none; padding: 3px 9px; font-size: 11.5px;">Buka Foto ↗</a>
+              </div>
             </div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Pilih file baru jika ingin mengganti foto bukti:</div>
-            <input type="file" id="editFileBukti" accept="image/*" style="font-size: 13px;">
-            <div id="editFileBuktiPreview" style="display:none; margin-top:8px;">
-              <img id="editFileBuktiThumb" style="max-height: 120px; border-radius: 6px; border: 1px solid var(--border);" alt="Preview baru">
+
+            <div class="edit-upload-box" id="dropzoneEditBukti" tabindex="0" role="button" aria-label="Upload Bukti Foto Baru">
+              <input type="file" id="editFileBukti" accept="image/*">
+              
+              <!-- State: Kosong / Belum ada file baru dipilih -->
+              <div class="edit-upload-empty" id="editBuktiEmpty">
+                <div class="edit-upload-icon-circle">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                </div>
+                <div class="edit-upload-text">
+                  <span class="upload-highlight">Pilih foto baru</span> atau seret file ke sini
+                  <div class="upload-meta-info">Format JPG, PNG, WebP (Maks. 8 MB) • Kosongkan jika tetap memakai foto tersimpan</div>
+                </div>
+              </div>
+
+              <!-- State: File baru dipilih -->
+              <div class="edit-upload-selected" id="editBuktiSelected" style="display:none;">
+                <div class="selected-file-left">
+                  <div class="selected-file-thumb">
+                    <img id="editFileBuktiThumb" alt="Preview baru">
+                  </div>
+                  <div class="selected-file-info">
+                    <div class="selected-file-name" id="editBuktiFileName">foto.jpg</div>
+                    <div class="selected-file-size" id="editBuktiFileSize">0 KB</div>
+                    <span class="selected-file-tag">Foto baru siap diunggah</span>
+                  </div>
+                </div>
+                <button type="button" class="btn-remove-file" id="btnHapusEditBukti" title="Batal ganti foto" aria-label="Batal ganti foto">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 
           <!-- Section: Struk Transportasi -->
-          <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
-            <label style="font-weight: 600; font-size: 14px; margin-bottom: 8px;">Klaim Struk Transportasi</label>
+          <div class="edit-section-divider">
+            <label class="edit-section-label">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              Klaim Struk Transportasi
+            </label>
             <div class="edit-fields-grid">
               <div class="field">
                 <label for="editAdaTransport">Ada Klaim Transport?</label>
@@ -502,13 +553,60 @@
                 <input type="number" id="editNominalTransport" min="0" step="1000" placeholder="Contoh: 50000">
               </div>
             </div>
-            <div id="wrapEditFileTransport" style="display:none; margin-top: 10px;">
-              <div id="editCurrentStrukWrap" style="margin-bottom: 8px; display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 13px; color: var(--text-secondary);">Struk saat ini:</span>
-                <a id="editCurrentStrukLink" href="#" target="_blank" class="link-materi-btn" style="text-decoration:none;">Lihat Struk</a>
+
+            <div id="wrapEditFileTransport" style="display:none; margin-top: 14px;">
+              <div class="edit-section-header">
+                <div id="editCurrentStrukWrap" class="current-file-badge">
+                  <span class="dot-status amber"></span>
+                  <span>Struk Tersimpan:</span>
+                  <a id="editCurrentStrukLink" href="#" target="_blank" class="link-materi-btn" style="text-decoration:none; padding: 3px 9px; font-size: 11.5px;">Buka Struk ↗</a>
+                </div>
               </div>
-              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Pilih file baru jika ingin mengganti struk (JPG/PNG/PDF):</div>
-              <input type="file" id="editFileTransport" accept="image/*,application/pdf" style="font-size: 13px;">
+
+              <!-- Upload Box Struk -->
+              <div class="edit-upload-box" id="dropzoneEditTransport" tabindex="0" role="button" aria-label="Upload Struk Baru">
+                <input type="file" id="editFileTransport" accept="image/*,application/pdf">
+                
+                <!-- State: Kosong / Belum ada struk baru dipilih -->
+                <div class="edit-upload-empty" id="editTransportEmpty">
+                  <div class="edit-upload-icon-circle amber">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                      <line x1="8" y1="21" x2="16" y2="21"></line>
+                      <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                  </div>
+                  <div class="edit-upload-text">
+                    <span class="upload-highlight">Pilih struk baru</span> atau seret file ke sini
+                    <div class="upload-meta-info">Format JPG, PNG, PDF (Maks. 8 MB) • Kosongkan jika tetap memakai struk tersimpan</div>
+                  </div>
+                </div>
+
+                <!-- State: Struk baru dipilih -->
+                <div class="edit-upload-selected" id="editTransportSelected" style="display:none;">
+                  <div class="selected-file-left">
+                    <div class="selected-file-thumb" id="editTransportThumbWrap">
+                      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                      </svg>
+                    </div>
+                    <div class="selected-file-info">
+                      <div class="selected-file-name" id="editTransportFileName">struk.pdf</div>
+                      <div class="selected-file-size" id="editTransportFileSize">0 KB</div>
+                      <span class="selected-file-tag">Struk baru siap diunggah</span>
+                    </div>
+                  </div>
+                  <button type="button" class="btn-remove-file" id="btnHapusEditTransport" title="Batal ganti struk" aria-label="Batal ganti struk">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
